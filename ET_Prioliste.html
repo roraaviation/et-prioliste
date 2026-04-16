@@ -974,6 +974,16 @@ function scannerCreateNew(){
   openModal();
 }
 
+setInterval(async()=>{
+  try{
+    const sel=Object.values(F).join(',');
+    const d=await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items?$select=${sel}&$top=500&$orderby=ID desc`);
+    allParts=d.d.results.map(mapPart);
+    renderList();
+    if(document.getElementById('screen-archiv').classList.contains('active'))renderArchiv();
+  }catch(e){console.warn('Auto-refresh Fehler:',e);}
+},30000);
+
 init();
 </script>
 </body>
