@@ -797,7 +797,7 @@ function onSearch(val){
   document.getElementById('search-clear').style.display=val?'block':'none';
   clearTimeout(searchTimer);
   searchQuery=val.trim().toUpperCase();
-  if(!val){document.getElementById('search-hint').textContent='';renderList();return;}
+  if(!val){searchQuery='';document.getElementById('search-hint').textContent='';renderList();return;}
   searchTimer=setTimeout(()=>{
     renderList();
     const v=searchQuery;
@@ -825,7 +825,7 @@ function onSearchKey(e){
     if(match){selectedId=match.id;showTab('offen');renderList();setTimeout(()=>document.getElementById('detail-container').scrollIntoView({behavior:'smooth',block:'nearest'}),100);}
   }
 }
-function clearSearch(){
+function clearSearch(){searchQuery='';
   document.getElementById('search-input').value='';
   document.getElementById('search-clear').style.display='none';
   document.getElementById('search-hint').textContent='';
