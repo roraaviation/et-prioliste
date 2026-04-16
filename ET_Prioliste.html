@@ -520,12 +520,17 @@ function renderList(){
     .filter(p=>matchSearch(p,searchQuery))
     .sort((a,b)=>{
       const ga=prioGroup(a.prio),gb=prioGroup(b.prio);
+      // PK (3) and Prio2 (1) can be interleaved via Reihenfolge
+      const pkP2=new Set([1,3]);
+      if(pkP2.has(ga)&&pkP2.has(gb)){
+        const rd=a.reihenfolge-b.reihenfolge;
+        if(rd!==0)return rd;
+        return ga-gb;
+      }
       if(ga!==gb)return ga-gb;
-      // Same prio group: sort by Reihenfolge, then Drehen first
       const rd=a.reihenfolge-b.reihenfolge;
       if(rd!==0)return rd;
-      const ba=a.bereich==='Drehen'?0:1, bb=b.bereich==='Drehen'?0:1;
-      return ba-bb;
+      return (a.bereich==='Drehen'?0:1)-(b.bereich==='Drehen'?0:1);
     });
   // Schichtübergabe: "heute" = 06:00 bis 05:59 nächsten Tag
   const now=new Date();
@@ -790,12 +795,17 @@ async function dropOn(e,targetId){
   };
   const parts=allParts.filter(p=>!DONE.includes(p.status)).sort((a,b)=>{
       const ga=prioGroup(a.prio),gb=prioGroup(b.prio);
+      // PK (3) and Prio2 (1) can be interleaved via Reihenfolge
+      const pkP2=new Set([1,3]);
+      if(pkP2.has(ga)&&pkP2.has(gb)){
+        const rd=a.reihenfolge-b.reihenfolge;
+        if(rd!==0)return rd;
+        return ga-gb;
+      }
       if(ga!==gb)return ga-gb;
-      // Same prio group: sort by Reihenfolge, then Drehen first
       const rd=a.reihenfolge-b.reihenfolge;
       if(rd!==0)return rd;
-      const ba=a.bereich==='Drehen'?0:1, bb=b.bereich==='Drehen'?0:1;
-      return ba-bb;
+      return (a.bereich==='Drehen'?0:1)-(b.bereich==='Drehen'?0:1);
     });
   const fromPart=parts.find(p=>p.id===dragId);
   const toPart=parts.find(p=>p.id===targetId);
