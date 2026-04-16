@@ -391,7 +391,7 @@ const DONE=['Freigegeben','Rückgewiesen'];
 const msalConfig={auth:{clientId:CLIENT_ID,authority:`https://login.microsoftonline.com/${TENANT_ID}`,redirectUri:window.location.href.split('?')[0]},cache:{cacheLocation:'sessionStorage'}};
 const msalInstance=new msal.PublicClientApplication(msalConfig);
 const scopes=['https://roraaviation.sharepoint.com/AllSites.Write'];
-let allParts=[],currentFilter='alle',statusFilter='alle',selectedId=null,_listType=null,userRolle='Fertigung',userEmail='';
+let allParts=[],_scannerModalActive=false,currentFilter='alle',statusFilter='alle',selectedId=null,_listType=null,userRolle='Fertigung',userEmail='';
 
 async function init(){
   await msalInstance.initialize();
@@ -478,7 +478,8 @@ async function loadParts(){
 async function updateItem(id,data){const digest=await getDigest();const listType=await getListItemType();await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items(${id})`,{method:'POST',headers:{'Content-Type':'application/json;odata=verbose','X-RequestDigest':digest,'X-HTTP-Method':'MERGE','IF-MATCH':'*'},body:JSON.stringify({'__metadata':{'type':listType},...data})});}
 async function createItem(data){const digest=await getDigest();const listType=await getListItemType();return spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items`,{method:'POST',headers:{'Content-Type':'application/json;odata=verbose','X-RequestDigest':digest},body:JSON.stringify({'__metadata':{'type':listType},...data})});}
 function mapPart(r){return{id:r[F.id],nr:r[F.titel]||'',bez:r[F.bez]||'',machine:r[F.machine]||'',bereich:r[F.bereich]||'',prio:r[F.prio]||'3',status:r[F.status]||'Angekündigt',notiz:r[F.notiz]||'',rueck:r[F.rueck]||'',reihenfolge:r[F.reihenfolge]||100,geplant:r[F.geplant]||null,angelegtVon:r[F.angelegtVon]||'',geaendertVon:r[F.geaendertVon]||'',letzteAenderung:r[F.letzteAenderung]||'',ts_angek:r[F.ts_angek]||null,ts_qs:r[F.ts_qs]||null,ts_haend:r[F.ts_haend]||null,ts_abg:r[F.ts_abg]||null};}
-function prioScore(p,b){if(p=='1'||p==1)return 100;if(p=='2'||p==2)return 80;if(p=='3'||p==3)return 60;if(p=='PZ')return 40;if(p=='WE')return 20;return 50;}
+function prioGroup(p){if(p=='1'||p==1)return 0;if(p=='2'||p==2)return 1;if(p=='3'||p==3)return 2;if(p=='PZ')return 3;if(p=='WE')return 4;return 5;}
+function prioScore(p,b){const g=prioGroup(p)*1000;const bScore=b==='Drehen'?0:b==='Fräsen'?1:2;return g+bScore;}
 function fmtTime(iso){if(!iso)return'–';const d=new Date(iso);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
 function fmtDT(iso){if(!iso)return'–';const d=new Date(iso);return`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')} ${fmtTime(iso)}`;}
 function durMin(a,b){if(!a||!b)return null;return Math.round((new Date(b)-new Date(a))/60000);}
@@ -498,18 +499,56 @@ function renderList(){
     return true;
   };
   const showDoneFilter=statusFilter==='Rückgewiesen'||statusFilter==='Freigegeben';
+  const now2=new Date();
+  const shiftStart2=new Date(now2);
+  if(now2.getHours()<6)shiftStart2.setDate(shiftStart2.getDate()-1);
+  shiftStart2.setHours(6,0,0,0);
+  const rejNrs=new Set(allParts.filter(p=>{
+    if(p.status!=='Rückgewiesen')return false;
+    return !allParts.some(x=>x.id!==p.id&&x.nr===p.nr&&!DONE.includes(x.status));
+  }).map(p=>p.nr));
   const openParts=allParts
     .filter(p=>{
       if(showDoneFilter)return p.status===statusFilter;
-      return !DONE.includes(p.status);
+      if(!DONE.includes(p.status))return true;
+      // Include rejected parts without re-measurement
+      if(p.status==='Rückgewiesen'&&rejNrs.has(p.nr))return true;
+      return false;
     })
     .filter(baseFilter)
     .filter(p=>!showDoneFilter?(statusFilter==='alle'||p.status===statusFilter):true)
     .filter(p=>matchSearch(p,searchQuery))
-    .sort((a,b)=>{const rd=a.reihenfolge-b.reihenfolge;return rd!==0?rd:prioScore(b.prio,b.bereich)-prioScore(a.prio,a.bereich);});
+    .sort((a,b)=>{
+      const ga=prioGroup(a.prio),gb=prioGroup(b.prio);
+      if(ga!==gb)return ga-gb;
+      // Same prio group: sort by Reihenfolge, then Drehen first
+      const rd=a.reihenfolge-b.reihenfolge;
+      if(rd!==0)return rd;
+      const ba=a.bereich==='Drehen'?0:1, bb=b.bereich==='Drehen'?0:1;
+      return ba-bb;
+    });
+  // Schichtübergabe: "heute" = 06:00 bis 05:59 nächsten Tag
+  const now=new Date();
+  const shiftStart=new Date(now);
+  if(now.getHours()<6)shiftStart.setDate(shiftStart.getDate()-1);
+  shiftStart.setHours(6,0,0,0);
+
+  // Rückgewiesene ohne neue Messung: check if Artikelnummer already re-measured
+  const rejectedWithoutRemeasure=allParts.filter(p=>{
+    if(p.status!=='Rückgewiesen')return false;
+    // Check if there's another open part with same Artikelnummer
+    const hasNew=allParts.some(x=>x.id!==p.id&&x.nr===p.nr&&!DONE.includes(x.status));
+    return !hasNew; // keep in list if no new measurement started
+  });
+  const rejectedNrs=new Set(rejectedWithoutRemeasure.map(p=>p.nr));
+
   const doneTodayParts=(currentFilter==='alle'&&statusFilter==='alle')?allParts
-    .filter(p=>DONE.includes(p.status))
-    .filter(p=>{const d=p.ts_abg?new Date(p.ts_abg).toDateString():null;return d===today;})
+    .filter(p=>{
+      if(!DONE.includes(p.status))return false;
+      if(p.status==='Rückgewiesen'&&rejectedNrs.has(p.nr))return false; // shown separately
+      const abg=p.ts_abg?new Date(p.ts_abg):null;
+      return abg&&abg>=shiftStart;
+    })
     .sort((a,b)=>(b.ts_abg||'')>(a.ts_abg||'')?1:-1):[];
   document.getElementById('count-label').textContent=`${openParts.length} offen · ${doneTodayParts.length} heute fertig`;
   document.getElementById('badge-offen').textContent=allParts.filter(p=>{if(!DONE.includes(p.status))return true;const d=p.ts_abg?new Date(p.ts_abg).toDateString():null;return d===today;}).length;
@@ -695,7 +734,18 @@ async function createPart(){
     allParts.unshift(mapPart(r.d));
     const todayStr=new Date().toDateString();
     document.getElementById('badge-offen').textContent=allParts.filter(x=>{if(!DONE.includes(x.status))return true;const d=x.ts_abg?new Date(x.ts_abg).toDateString():null;return d===todayStr;}).length;
-    showToast(`${nr} angelegt`,'ok');closeModal();renderList();
+    showToast(`${nr} angelegt`,'ok');
+    if(_scannerModalActive){
+      _scannerModalActive=false;
+      closeModal();
+      document.getElementById('scanner-screen').classList.add('active');
+      document.getElementById('scanner-input').value='';
+      resetScannerResult();
+      setTimeout(()=>document.getElementById('scanner-input').focus(),100);
+    } else {
+      closeModal();
+    }
+    renderList();
   }catch(e){msg.className='form-msg err';msg.textContent='Fehler: '+e.message;}
 }
 function clearForm(){['f-nr','f-bez','f-machine','f-notiz','f-geplant'].forEach(i=>document.getElementById(i).value='');document.getElementById('f-bereich').value='';document.getElementById('f-prio').value='2';const m=document.getElementById('form-msg');m.className='form-msg';m.textContent='';}
@@ -738,7 +788,22 @@ async function dropOn(e,targetId){
     if(currentFilter==='Fräsen')return p.bereich==='Fräsen';
     return true;
   };
-  const parts=allParts.filter(p=>!DONE.includes(p.status)).sort((a,b)=>{const rd=a.reihenfolge-b.reihenfolge;return rd!==0?rd:prioScore(b.prio,b.bereich)-prioScore(a.prio,a.bereich);});
+  const parts=allParts.filter(p=>!DONE.includes(p.status)).sort((a,b)=>{
+      const ga=prioGroup(a.prio),gb=prioGroup(b.prio);
+      if(ga!==gb)return ga-gb;
+      // Same prio group: sort by Reihenfolge, then Drehen first
+      const rd=a.reihenfolge-b.reihenfolge;
+      if(rd!==0)return rd;
+      const ba=a.bereich==='Drehen'?0:1, bb=b.bereich==='Drehen'?0:1;
+      return ba-bb;
+    });
+  const fromPart=parts.find(p=>p.id===dragId);
+  const toPart=parts.find(p=>p.id===targetId);
+  if(!fromPart||!toPart){dragId=null;return;}
+  if(prioGroup(fromPart.prio)!==prioGroup(toPart.prio)){
+    showToast('Verschieben nur innerhalb gleicher Priorität möglich','err');
+    dragId=null;return;
+  }
   const fromIdx=parts.findIndex(p=>p.id===dragId);
   const toIdx=parts.findIndex(p=>p.id===targetId);
   if(fromIdx===-1||toIdx===-1){dragId=null;return;}
@@ -961,11 +1026,15 @@ function resetScannerResult(){
 function scannerCreateNew(){
   const nr=document.getElementById('scanner-new-btn').getAttribute('data-nr')||'';
   document.getElementById('f-nr').value=nr;
-  // Switch to main app and open modal
-  document.getElementById('scanner-screen').classList.remove('active');
-  showTab('offen');
-  openModal();
+  openScannerModal();
 }
+function openScannerModal(){
+  document.getElementById('modal-overlay').classList.add('show');
+  // After save, stay on scanner
+  _scannerModalActive=true;
+  setTimeout(()=>document.getElementById('f-nr').focus(),100);
+}
+
 
 setInterval(async()=>{
   if(!msalInstance.getAllAccounts().length)return;
