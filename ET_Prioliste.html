@@ -53,7 +53,7 @@ td.mono{font-family:var(--mono);font-size:13px}
 .prio-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:12px;font-weight:700;font-family:var(--mono)}
 .prio-1{background:var(--p1lt);color:var(--p1);border:1.5px solid var(--p1)}
 .prio-2{background:var(--p2lt);color:var(--p2);border:1.5px solid var(--accent)}
-.prio-3{background:var(--p3lt);color:var(--p3);border:1.5px solid var(--p3)}
+.prio-3{background:var(--p3lt);color:var(--p3);border:1.5px solid var(--p3)}.prio-PZ{background:#f0f0f0;color:#555;border:1.5px solid #999}.prio-WE{background:#e8f5ff;color:#1a9ae0;border:1.5px solid #1a9ae0}
 .status-badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap}
 .s-angek{background:#f2f3f5;color:#888;border:1px solid #ddd}
 .s-qs{background:var(--p2lt);color:var(--accent);border:1px solid #bed5f0}
@@ -223,7 +223,7 @@ td.mono{font-family:var(--mono);font-size:13px}
         <select id="f-bereich"><option value="">Auswählen...</option><option>Fräsen</option><option>Drehen</option><option>Sonstige</option></select>
       </div>
       <div class="form-group"><label>Priorität *</label>
-        <select id="f-prio"><option value="1">Prio 1 – Höchste</option><option value="2" selected>Prio 2</option><option value="3">Prio 3 – Niedrig</option></select>
+        <select id="f-prio"><option value="1">Prio 1</option><option value="2" selected>Prio 2</option><option value="3">Prio 3</option><option value="PZ">PZ</option><option value="WE">WE</option></select>
       </div>
       <div class="form-group"></div>
       <div class="form-group full"><label>Notiz (optional)</label><textarea id="f-notiz"></textarea></div>
@@ -241,18 +241,26 @@ td.mono{font-family:var(--mono);font-size:13px}
     <button class="modal-close" onclick="closePrioModal()">✕</button>
     <div class="modal-title">Priorität ändern</div>
     <div id="prio-modal-info" style="font-size:14px;color:var(--text2);margin-bottom:16px"></div>
-    <div style="display:flex;gap:10px;justify-content:center">
-      <button onclick="setPrio(1)" class="prio-btn" style="flex:1;padding:16px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p1)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="font-size:20px;font-weight:700;color:var(--p1);font-family:var(--mono)">1</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px">Höchste</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button onclick="setPrio('1')" style="flex:1;min-width:60px;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p1)';this.style.background='var(--p1lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+        <div style="font-size:18px;font-weight:700;color:var(--p1);font-family:var(--mono)">1</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">Höchste</div>
       </button>
-      <button onclick="setPrio(2)" class="prio-btn" style="flex:1;padding:16px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p2)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="font-size:20px;font-weight:700;color:var(--p2);font-family:var(--mono)">2</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px">Mittel</div>
+      <button onclick="setPrio('2')" style="flex:1;min-width:60px;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p2)';this.style.background='var(--p2lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+        <div style="font-size:18px;font-weight:700;color:var(--p2);font-family:var(--mono)">2</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">Mittel</div>
       </button>
-      <button onclick="setPrio(3)" class="prio-btn" style="flex:1;padding:16px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p3)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="font-size:20px;font-weight:700;color:var(--p3);font-family:var(--mono)">3</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px">Niedrig</div>
+      <button onclick="setPrio('3')" style="flex:1;min-width:60px;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p3)';this.style.background='var(--p3lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+        <div style="font-size:18px;font-weight:700;color:var(--p3);font-family:var(--mono)">3</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">Niedrig</div>
+      </button>
+      <button onclick="setPrio('PZ')" style="flex:1;min-width:60px;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='#666';this.style.background='#f5f5f5'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+        <div style="font-size:18px;font-weight:700;color:#555;font-family:var(--mono)">PZ</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">Prozess</div>
+      </button>
+      <button onclick="setPrio('WE')" style="flex:1;min-width:60px;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='#1a9ae0';this.style.background='#e8f5ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+        <div style="font-size:18px;font-weight:700;color:#1a9ae0;font-family:var(--mono)">WE</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">Wareneingang</div>
       </button>
     </div>
   </div>
@@ -325,7 +333,7 @@ async function loadParts(){
 async function updateItem(id,data){const digest=await getDigest();const listType=await getListItemType();await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items(${id})`,{method:'POST',headers:{'Content-Type':'application/json;odata=verbose','X-RequestDigest':digest,'X-HTTP-Method':'MERGE','IF-MATCH':'*'},body:JSON.stringify({'__metadata':{'type':listType},...data})});}
 async function createItem(data){const digest=await getDigest();const listType=await getListItemType();return spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items`,{method:'POST',headers:{'Content-Type':'application/json;odata=verbose','X-RequestDigest':digest},body:JSON.stringify({'__metadata':{'type':listType},...data})});}
 function mapPart(r){return{id:r[F.id],nr:r[F.titel]||'',bez:r[F.bez]||'',machine:r[F.machine]||'',bereich:r[F.bereich]||'',prio:r[F.prio]||'3',status:r[F.status]||'Angekündigt',notiz:r[F.notiz]||'',rueck:r[F.rueck]||'',reihenfolge:r[F.reihenfolge]||100,ts_angek:r[F.ts_angek]||null,ts_qs:r[F.ts_qs]||null,ts_haend:r[F.ts_haend]||null,ts_abg:r[F.ts_abg]||null};}
-function prioScore(p,b){if(p==1)return 100;if(p==2&&b==='Drehen')return 80;if(p==2&&b==='Fräsen')return 70;if(p==2)return 60;if(p==3&&b==='Drehen')return 40;if(p==3&&b==='Fräsen')return 35;return 30;}
+function prioScore(p,b){if(p=='PZ')return 90;if(p=='WE')return 85;if(p==1)return 100;if(p==2&&b==='Drehen')return 80;if(p==2&&b==='Fräsen')return 70;if(p==2)return 60;if(p==3&&b==='Drehen')return 40;if(p==3&&b==='Fräsen')return 35;return 30;}
 function fmtTime(iso){if(!iso)return'–';const d=new Date(iso);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
 function fmtDT(iso){if(!iso)return'–';const d=new Date(iso);return`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')} ${fmtTime(iso)}`;}
 function durMin(a,b){if(!a||!b)return null;return Math.round((new Date(b)-new Date(a))/60000);}
@@ -334,9 +342,16 @@ function sCss(s){return STATUS_FLOW[s]?.css||'s-angek';}
 function bCss(b){if(b==='Drehen'||b==='Dreherei')return'b-drehen';if(b==='Fräsen'||b==='Fräserei')return'b-fraesen';return'';}
 
 function renderList(){
-  const parts=allParts.filter(p=>!DONE.includes(p.status)).filter(p=>{if(currentFilter==='Drehen')return p.bereich==='Drehen';if(currentFilter==='Fräsen')return p.bereich==='Fräsen';if(currentFilter==='p1')return p.prio==1;return true;}).filter(p=>{if(statusFilter!=='alle')return p.status===statusFilter;return true;}).sort((a,b)=>{ const rd=a.reihenfolge-b.reihenfolge; return rd!==0?rd:prioScore(b.prio,b.bereich)-prioScore(a.prio,a.bereich); });
+  const today=new Date().toDateString();
+  const parts=allParts.filter(p=>{
+    if(!DONE.includes(p.status))return true;
+    // Show today's done items
+    const abgDate=p.ts_abg?new Date(p.ts_abg).toDateString():null;
+    return abgDate===today;
+  }).filter(p=>{if(currentFilter==='Drehen')return p.bereich==='Drehen';if(currentFilter==='Fräsen')return p.bereich==='Fräsen';if(currentFilter==='p1')return p.prio==1;return true;}).filter(p=>{if(statusFilter!=='alle')return p.status===statusFilter;return true;}).sort((a,b)=>{ const rd=a.reihenfolge-b.reihenfolge; return rd!==0?rd:prioScore(b.prio,b.bereich)-prioScore(a.prio,a.bereich); });
   document.getElementById('count-label').textContent=`${parts.length} Teile offen`;
-  document.getElementById('badge-offen').textContent=allParts.filter(p=>!DONE.includes(p.status)).length;
+  const _today=new Date().toDateString();
+  document.getElementById('badge-offen').textContent=allParts.filter(p=>{if(!DONE.includes(p.status))return true;const d=p.ts_abg?new Date(p.ts_abg).toDateString():null;return d===_today;}).length;
   document.getElementById('parts-tbody').innerHTML=parts.map(p=>`<tr draggable="true" ondragstart="dragStart(event,${p.id})" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropOn(event,${p.id})" onclick="selectPart(${p.id})" class="${selectedId===p.id?'selected':''}" style="cursor:grab">
     <td><span class="prio-badge prio-${p.prio}">${p.prio}</span></td>
     <td class="mono" style="font-weight:600">${p.nr}</td><td>${p.bez}</td>
@@ -396,7 +411,10 @@ function renderDetail(){
         <button class="btn btn-danger btn-sm" onclick="confirmRueck(${p.id})">Bestätigen</button>
         <button class="btn btn-sm" onclick="document.getElementById('rueck-section').style.display='none'">Abbrechen</button>
       </div>
-    </div>`:`<div style="padding-top:16px;border-top:1px solid var(--border);font-size:14px;color:var(--text3)">Teil ist abgeschlossen.</div>`}
+    </div>`:`<div style="padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span style="font-size:13px;color:var(--text3)">${p.status === 'Freigegeben' ? '✓ Freigegeben' : '✗ Rückgewiesen'}</span>
+      ${p.status==='Rückgewiesen'?`<button class="btn btn-primary" onclick="erneutMessen(${p.id})">Erneut messen →</button>`:''}
+    </div>`}
   </div>`;
 }
 
@@ -455,7 +473,8 @@ async function createPart(){
     const now=new Date().toISOString();
     const r=await createItem({[F.titel]:nr,[F.bez]:bez,[F.machine]:machine,[F.bereich]:bereich,[F.prio]:prio,[F.status]:'Angekündigt',[F.notiz]:notiz,[F.ts_angek]:now});
     allParts.unshift(mapPart(r.d));
-    document.getElementById('badge-offen').textContent=allParts.filter(p=>!DONE.includes(p.status)).length;
+    const _today=new Date().toDateString();
+  document.getElementById('badge-offen').textContent=allParts.filter(p=>{if(!DONE.includes(p.status))return true;const d=p.ts_abg?new Date(p.ts_abg).toDateString():null;return d===_today;}).length;
     showToast(`${nr} angelegt`,'ok');closeModal();renderList();
   }catch(e){msg.className='form-msg err';msg.textContent='Fehler: '+e.message;}
 }
@@ -494,7 +513,13 @@ async function dropOn(e,targetId){
   const tr=e.target.closest('tr');
   if(tr){tr.classList.remove('tr-drag-over');tr.style.opacity='';}
   if(!dragId||dragId===targetId){dragId=null;return;}
-  const parts=allParts.filter(p=>!DONE.includes(p.status)).sort((a,b)=>{const rd=a.reihenfolge-b.reihenfolge;return rd!==0?rd:prioScore(b.prio,b.bereich)-prioScore(a.prio,a.bereich);});
+  const today=new Date().toDateString();
+  const parts=allParts.filter(p=>{
+    if(!DONE.includes(p.status))return true;
+    // Show today's done items
+    const abgDate=p.ts_abg?new Date(p.ts_abg).toDateString():null;
+    return abgDate===today;
+  }).sort((a,b)=>{const rd=a.reihenfolge-b.reihenfolge;return rd!==0?rd:prioScore(b.prio,b.bereich)-prioScore(a.prio,a.bereich);});
   const fromIdx=parts.findIndex(p=>p.id===dragId);
   const toIdx=parts.findIndex(p=>p.id===targetId);
   if(fromIdx===-1||toIdx===-1){dragId=null;return;}
@@ -515,6 +540,27 @@ async function dropOn(e,targetId){
     try{await updateItem(u.id,{[F.reihenfolge]:u.r});}catch(e){console.error(e);}
   }
   showToast('Reihenfolge gespeichert','ok');
+}
+
+
+async function erneutMessen(id){
+  const p=allParts.find(x=>x.id===id);
+  if(!p)return;
+  const datum=p.ts_abg?new Date(p.ts_abg).toLocaleDateString('de-AT'):'heute';
+  const notiz=`⚠ Rückweisung vom ${datum}${p.rueck?': '+p.rueck:''}`;
+  try{
+    const now=new Date().toISOString();
+    const r=await createItem({
+      [F.titel]:p.nr,[F.bez]:p.bez,[F.machine]:p.machine,
+      [F.bereich]:p.bereich,[F.prio]:p.prio,[F.status]:'Angekündigt',
+      [F.notiz]:notiz,[F.ts_angek]:now
+    });
+    allParts.unshift(mapPart(r.d));
+    document.getElementById('badge-offen').textContent=allParts.filter(x=>!DONE.includes(x.status)).length;
+    showToast(`${p.nr} erneut angelegt`,'ok');
+    selectedId=null;
+    renderList();
+  }catch(e){showToast('Fehler: '+e.message,'err');}
 }
 
 init();
