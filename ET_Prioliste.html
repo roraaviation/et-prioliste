@@ -427,7 +427,7 @@ const F = {
   id:'ID',titel:'Title',bez:'Bauteilbezeichnung',machine:'Maschinennummer',
   bereich:'Fertigungsbereich',prio:'Priorit_x00e4_t',status:'Status',
   notiz:'Notiz',rueck:'R_x00fc_ckweisungsgrund',
-  reihenfolge:'Reihenfolge',geplant:'GeplanteAnkunftszeit',ts_angek:'TS_Angek_x00fc_ndigt',ts_qs:'TS_Eingetroffen',
+  reihenfolge:'Reihenfolge',geplant:'GeplanteAnkunftszeit',angelegtVon:'Angelegt_von',geaendertVon:'Geaendert_von',letzteAenderung:'Letzte_Aenderung',ts_angek:'TS_Angek_x00fc_ndigt',ts_qs:'TS_Eingetroffen',
   ts_haend:'TS_H_x00e4_ndische_Messung',ts_abg:'TS_Abgeschlossen'
 };
 const STATUS_FLOW={
@@ -526,7 +526,7 @@ async function loadParts(){
 }
 async function updateItem(id,data){const digest=await getDigest();const listType=await getListItemType();await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items(${id})`,{method:'POST',headers:{'Content-Type':'application/json;odata=verbose','X-RequestDigest':digest,'X-HTTP-Method':'MERGE','IF-MATCH':'*'},body:JSON.stringify({'__metadata':{'type':listType},...data})});}
 async function createItem(data){const digest=await getDigest();const listType=await getListItemType();return spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items`,{method:'POST',headers:{'Content-Type':'application/json;odata=verbose','X-RequestDigest':digest},body:JSON.stringify({'__metadata':{'type':listType},...data})});}
-function mapPart(r){return{id:r[F.id],nr:r[F.titel]||'',bez:r[F.bez]||'',machine:r[F.machine]||'',bereich:r[F.bereich]||'',prio:r[F.prio]||'3',status:r[F.status]||'Angekündigt',notiz:r[F.notiz]||'',rueck:r[F.rueck]||'',reihenfolge:r[F.reihenfolge]||100,geplant:r[F.geplant]||null,ts_angek:r[F.ts_angek]||null,ts_qs:r[F.ts_qs]||null,ts_haend:r[F.ts_haend]||null,ts_abg:r[F.ts_abg]||null};}
+function mapPart(r){return{id:r[F.id],nr:r[F.titel]||'',bez:r[F.bez]||'',machine:r[F.machine]||'',bereich:r[F.bereich]||'',prio:r[F.prio]||'3',status:r[F.status]||'Angekündigt',notiz:r[F.notiz]||'',rueck:r[F.rueck]||'',reihenfolge:r[F.reihenfolge]||100,geplant:r[F.geplant]||null,angelegtVon:r[F.angelegtVon]||'',geaendertVon:r[F.geaendertVon]||'',letzteAenderung:r[F.letzteAenderung]||'',ts_angek:r[F.ts_angek]||null,ts_qs:r[F.ts_qs]||null,ts_haend:r[F.ts_haend]||null,ts_abg:r[F.ts_abg]||null};}
 function prioScore(p,b){if(p=='1'||p==1)return 100;if(p=='2'||p==2)return 80;if(p=='3'||p==3)return 60;if(p=='PZ')return 40;if(p=='WE')return 20;return 50;}
 function fmtTime(iso){if(!iso)return'–';const d=new Date(iso);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
 function fmtDT(iso){if(!iso)return'–';const d=new Date(iso);return`${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')} ${fmtTime(iso)}`;}
@@ -624,6 +624,18 @@ function renderDetail(){
       ${p.notiz&&p.notiz.includes("⚠")?`<div class="detail-field" style="grid-column:1/-1"><label>Notiz</label><div style="background:var(--p1lt);border:1px solid var(--p1);border-radius:var(--radius);padding:10px 14px;color:var(--p1);font-size:14px">${p.notiz}</div></div>`:p.notiz?`<div class="detail-field"><label>Notiz</label><span style="font-weight:400">${p.notiz}</span></div>`:''}
       ${p.rueck?`<div class="detail-field"><label>Rückweisungsgrund</label><span style="color:var(--p1);font-weight:400">${p.rueck}</span></div>`:''}
     </div>
+    <details style="margin-bottom:16px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+      <summary style="padding:10px 14px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);background:var(--bg2);list-style:none;display:flex;align-items:center;gap:6px">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Verlauf & Details
+      </summary>
+      <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="detail-field"><label>Angelegt von</label><span style="font-weight:400">${p.angelegtVon||'–'}</span></div>
+        <div class="detail-field"><label>Zuletzt geändert von</label><span style="font-weight:400">${p.geaendertVon||'–'}</span></div>
+        <div class="detail-field"><label>Letzte Änderung</label><span style="font-weight:400">${p.letzteAenderung||'–'}</span></div>
+        <div class="detail-field"><label>Angekündigt</label><span style="font-weight:400">${fmtTime(p.ts_angek)||'–'}</span></div>
+      </div>
+    </details>
     ${next.length>0?`<div class="action-row" style="flex-direction:column;gap:12px">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <span style="font-size:12px;color:var(--text3);min-width:90px">Nächster Status:</span>
@@ -655,7 +667,8 @@ async function confirmRueck(id){const g=document.getElementById('rueck-input').v
 async function doStatus(id,newStatus,rueck){
   showToast('Speichere...','');
   const now=new Date().toISOString();
-  const patch={[F.status]:newStatus};
+  const userName=document.getElementById('user-name').textContent;
+  const patch={[F.status]:newStatus,[F.geaendertVon]:userName,[F.letzteAenderung]:'Status → '+newStatus};
   if(newStatus==='Bauteil in QS')patch[F.ts_qs]=now;
   if(newStatus==='Händische Messung')patch[F.ts_haend]=now;
   if(DONE.includes(newStatus))patch[F.ts_abg]=now;
@@ -710,7 +723,7 @@ async function createPart(){
       today.setHours(parseInt(h),parseInt(m),0,0);
       geplantISO=today.toISOString();
     }
-    const r=await createItem({[F.titel]:nr,[F.bez]:bez,[F.machine]:machine,[F.bereich]:bereich,[F.prio]:prio,[F.status]:'Angekündigt',[F.notiz]:notiz,[F.geplant]:geplantISO,[F.ts_angek]:now});
+    const r=await createItem({[F.titel]:nr,[F.bez]:bez,[F.machine]:machine,[F.bereich]:bereich,[F.prio]:prio,[F.status]:'Angekündigt',[F.notiz]:notiz,[F.geplant]:geplantISO,[F.ts_angek]:now,[F.angelegtVon]:document.getElementById('user-name').textContent});
     allParts.unshift(mapPart(r.d));
     const _today2=new Date().toDateString();
     document.getElementById('badge-offen').textContent=allParts.filter(x=>{if(!DONE.includes(x.status))return true;const d=x.ts_abg?new Date(x.ts_abg).toDateString():null;return d===_today2;}).length;
@@ -957,7 +970,8 @@ async function scannerAdvance(newStatus){
   if(btn){btn.disabled=true;btn.textContent='Speichere...';}
   
   const now=new Date().toISOString();
-  const patch={[F.status]:newStatus};
+  const userName=document.getElementById('user-name').textContent;
+  const patch={[F.status]:newStatus,[F.geaendertVon]:userName,[F.letzteAenderung]:'Status → '+newStatus};
   if(newStatus==='Bauteil in QS')patch[F.ts_qs]=now;
   if(newStatus==='Händische Messung')patch[F.ts_haend]=now;
   
