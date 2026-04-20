@@ -190,6 +190,7 @@ td.mono{font-family:var(--mono);font-size:13px}
   <div class="tabs">
     <button class="tab active" onclick="showTab('offen')" id="tab-offen">Offen <span class="tab-badge" id="badge-offen">–</span></button>
     <button class="tab" onclick="showTab('archiv')" id="tab-archiv">Archiv <span class="tab-badge" id="badge-archiv">–</span></button>
+    <button class="tab" onclick="showTab('monitoring')" id="tab-monitoring" style="display:none">CMM Monitoring <span class="tab-badge" id="badge-monitoring">–</span></button>
   </div>
 
   <div style="display:flex;align-items:center;gap:10px;padding:10px 28px;background:#fff;border-bottom:1px solid var(--border)" id="search-bar">
@@ -252,6 +253,12 @@ td.mono{font-family:var(--mono);font-size:13px}
       </div>
     </div>
   </div>
+</div>
+
+<!-- MONITORING SCREEN -->
+<div class="main screen" id="screen-monitoring">
+  <div id="monitoring-loading" class="loading"><div class="spinner"></div>Lade CMM-Daten...</div>
+  <div id="monitoring-content"></div>
 </div>
 
 <!-- SCANNER SCREEN -->
@@ -378,6 +385,8 @@ const CLIENT_ID  = '5d9b0308-6ee7-4d5f-9102-d25800ea909d';
 const TENANT_ID  = '37d2241e-ea62-4e1b-ae54-2578c0fda4d8';
 const SITE_URL   = 'https://roraaviation.sharepoint.com/sites/Quality-inspection';
 const LIST_NAME  = 'ET-Prioliste neu';
+const CMM_STATUS_LIST    = 'CMM-Status';
+const CMM_STILLSTAND_LIST= 'CMM-Stillstand';
 const F = {
   id:'ID',titel:'Title',bez:'Bauteilbezeichnung',machine:'Maschinennummer',
   bereich:'Fertigungsbereich',prio:'Priorit_x00e4_t',status:'Status',
@@ -396,7 +405,10 @@ const msalConfig={auth:{clientId:CLIENT_ID,authority:`https://login.microsoftonl
 const msalInstance=new msal.PublicClientApplication(msalConfig);
 const scopes=['https://roraaviation.sharepoint.com/AllSites.Write'];
 let allParts=[],_scannerModalActive=false,currentFilter='alle',statusFilter='alle',selectedId=null,_listType=null,userRolle='Fertigung',userEmail='';
-
+let cmmStatus=[],cmmStillstand=[];
+function canAdmin(){return userRolle==='Admin'||userRolle==='Teamleiter';}
+function canQS(){return canAdmin()||userRolle==='QS';}
+function canTeamleiter(){return userRolle==='Admin'||userRolle==='Teamleiter';}
 async function init(){
   await msalInstance.initialize();
   const resp=await msalInstance.handleRedirectPromise();
@@ -434,9 +446,14 @@ async function loadRolle(){
     const entries=d.d.results;
     const me=entries.find(e=>(e.Title||'').toLowerCase()===userEmail);
     if(me&&me.Rolle)userRolle=me.Rolle;
-    // Show role badge in header
     const badge=document.getElementById('rolle-badge');
-    if(badge){badge.textContent=userRolle;badge.style.background=userRolle==='Admin'?'var(--p1lt)':userRolle==='QS'?'var(--p2lt)':'var(--p3lt)';badge.style.color=userRolle==='Admin'?'var(--p1)':userRolle==='QS'?'var(--p2)':'var(--p3)';}
+    const rolleColors={Admin:['var(--p1lt)','var(--p1)'],Teamleiter:['#fff0e0','#d06000'],QS:['var(--p2lt)','var(--p2)']};
+    const [bg,col]=rolleColors[userRolle]||['var(--p3lt)','var(--p3)'];
+    if(badge){badge.textContent=userRolle;badge.style.background=bg;badge.style.color=col;}
+    if(userRolle==='Admin'){
+      const mt=document.getElementById('tab-monitoring');
+      if(mt)mt.style.display='';
+    }
     if(userRolle==='Scanner'||new URLSearchParams(window.location.search).get('mode')==='scanner'){
       initScanner();
     } else {
@@ -448,8 +465,7 @@ async function loadRolle(){
     document.getElementById('search-bar').style.display='flex';
   }
 }
-function canAdmin(){return userRolle==='Admin';}
-function canQS(){return userRolle==='Admin'||userRolle==='QS';}
+function canAdmin_unused(){}
 
 async function loadParts(){
   try{
@@ -797,7 +813,15 @@ function renderArchiv(){
   document.getElementById('archiv-loading').style.display='none';
   document.getElementById('archiv-container').style.display='block';
 }
-function showTab(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');document.getElementById('tab-'+id).classList.add('active');if(id==='archiv')renderArchiv();}
+function showTab(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  document.getElementById('search-bar').style.display=(id==='offen')?'flex':'none';
+  if(id==='archiv')renderArchiv();
+  if(id==='monitoring')loadMonitoringData();
+}
 function setStatusFilter(s,btn){try{localStorage.setItem('et_status',s);}catch(e){}statusFilter=s;['chip-s-alle','chip-s-angek','chip-s-qs','chip-s-haend','chip-s-rueck'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active')});btn.classList.add('active');selectedId=null;renderList();}
 function setFilter(f,btn){try{localStorage.setItem('et_bereich',f);}catch(e){}currentFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');selectedId=null;renderList();}
 let toastTimer;
@@ -1079,6 +1103,145 @@ function openScannerModal(){
 }
 
 
+// ── CMM MONITORING ────────────────────────────────────────────────────────
+function calcQSPartsAtTime(startIso, endIso){
+  const s=new Date(startIso).getTime();
+  const e=endIso?new Date(endIso).getTime():Date.now();
+  return allParts.filter(p=>{
+    if(!p.ts_qs)return false;
+    const enter=new Date(p.ts_qs).getTime();
+    const leave=p.ts_haend?new Date(p.ts_haend).getTime():(p.ts_abg?new Date(p.ts_abg).getTime():Infinity);
+    return enter<=e && leave>=s;
+  }).length;
+}
+
+async function loadMonitoringData(){
+  if(userRolle!=='Admin')return;
+  document.getElementById('monitoring-loading').style.display='flex';
+  document.getElementById('monitoring-content').style.display='none';
+  try{
+    const isAdmin=userRolle==='Admin';
+    const fetches=[
+      spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STATUS_LIST)}')/items?$select=ID,Title,LastSignalZeit,CMMStatus&$top=50`)
+    ];
+    if(isAdmin)fetches.push(spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STILLSTAND_LIST)}')/items?$select=ID,Title,StartZeit,EndZeit,DauerMinuten&$top=200&$orderby=StartZeit%20desc`));
+    const results=await Promise.all(fetches);
+    cmmStatus=results[0].d.results.map(r=>({id:r.ID,maschine:r.Title,lastSignal:r.LastSignalZeit,status:r.CMMStatus}));
+    cmmStillstand=isAdmin?results[1].d.results.map(r=>({id:r.ID,maschine:r.Title,startZeit:r.StartZeit,endZeit:r.EndZeit,dauerMin:r.DauerMinuten}})):[];
+  }catch(e){
+    cmmStatus=[];cmmStillstand=[];
+    console.warn('CMM-Daten Fehler:',e);
+  }
+  document.getElementById('monitoring-loading').style.display='none';
+  document.getElementById('monitoring-content').style.display='block';
+  renderMonitoring();
+}
+
+function renderMonitoring(){
+  const cont=document.getElementById('monitoring-content');
+  if(!cont||cont.style.display==='none')return;
+  const now=Date.now();
+  const qsNow=allParts.filter(p=>p.status==='Bauteil in QS').length;
+
+  // Machine status cards
+  const machineCards=cmmStatus.length===0
+    ?'<div style="color:var(--text3);font-size:13px;padding:12px 0">Keine Maschinendaten – SharePoint-Liste "CMM-Status" prüfen.</div>'
+    :cmmStatus.map(m=>{
+      const lastMs=m.lastSignal?new Date(m.lastSignal).getTime():0;
+      const minAgo=Math.floor((now-lastMs)/60000);
+      const isDown=minAgo>=5;
+      const isAlert=isDown&&minAgo>=15&&qsNow>0;
+      const col=isAlert?'var(--p1)':isDown?'#888':'var(--p3)';
+      const bg=isAlert?'var(--p1lt)':isDown?'var(--bg3)':'var(--p3lt)';
+      const label=isAlert?'⚠ Stillstand!':isDown?'Gestoppt':'Läuft';
+      const minStr=minAgo<60?minAgo+' min':Math.floor(minAgo/60)+'h '+minAgo%60+'m';
+      return `<div style="background:#fff;border:2px solid ${col};border-radius:10px;padding:16px 20px;min-width:230px;box-shadow:var(--shadow);flex:1;max-width:300px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0${isAlert?';animation:spin .8s linear infinite':''}"></div>
+          <span style="font-weight:700;font-family:var(--mono);font-size:15px">${m.maschine}</span>
+          <span style="margin-left:auto;font-size:11px;font-weight:600;padding:2px 9px;border-radius:12px;background:${bg};color:${col}">${label}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text2)">Letztes Signal: <strong>${m.lastSignal?fmtDT(m.lastSignal):'–'}</strong></div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">Vor <strong>${minStr}</strong></div>
+        ${isAlert?`<div style="margin-top:10px;padding:7px 11px;background:var(--p1lt);border-radius:6px;font-size:12px;color:var(--p1);font-weight:600">⚠ ${qsNow} Bauteil${qsNow>1?'e warten':'wartet'} in QS!</div>`:''}
+      </div>`;
+    }).join('');
+
+  // Global alert banner
+  const machineAlert=cmmStatus.some(m=>{
+    const min=m.lastSignal?Math.floor((now-new Date(m.lastSignal).getTime())/60000):999;
+    return min>=15;
+  })&&qsNow>0;
+  const alertBanner=machineAlert?`<div style="background:var(--p1lt);border:2px solid var(--p1);border-radius:var(--radius);padding:14px 20px;margin-bottom:18px;display:flex;align-items:center;gap:14px">
+    <span style="font-size:24px;flex-shrink:0">⚠</span>
+    <div>
+      <div style="font-weight:700;color:var(--p1);font-size:15px">Maschine steht – Teile warten!</div>
+      <div style="font-size:13px;color:var(--p1);margin-top:3px">${qsNow} Bauteil${qsNow>1?'e sind':'ist'} in der QS-Queue, aber die CMM läuft nicht. Bitte nachsehen!</div>
+    </div>
+  </div>`:'';
+
+  // History table with QS correlation
+  const histRows=cmmStillstand.length===0
+    ?'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">Keine Stillstandsdaten vorhanden</td></tr>'
+    :cmmStillstand.map(s=>{
+      const qs=calcQSPartsAtTime(s.startZeit,s.endZeit);
+      const ok=qs===0;
+      return `<tr>
+        <td class="mono" style="font-size:12px">${fmtDT(s.startZeit)}</td>
+        <td class="mono" style="font-size:12px">${s.endZeit?fmtDT(s.endZeit):'<em style="color:var(--p1)">läuft noch</em>'}</td>
+        <td class="mono" style="font-weight:700;color:var(--accent)">${durStr(s.dauerMin)}</td>
+        <td style="text-align:center;font-family:var(--mono);font-weight:700;color:${qs>0?'var(--p1)':'var(--text3)'}">${qs}</td>
+        <td><span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:${ok?'var(--p3lt)':'var(--p1lt)'};color:${ok?'var(--p3)':'var(--p1)'}">${ok?'✓ Okay':'⚠ Unnötig'}</span></td>
+        <td class="mono" style="font-size:12px;color:var(--text2)">${s.maschine}</td>
+      </tr>`;
+    }).join('');
+
+  // Stats
+  const totalDown=cmmStillstand.length;
+  const totalUnnötig=cmmStillstand.filter(s=>calcQSPartsAtTime(s.startZeit,s.endZeit)>0).length;
+  const totalMinDown=cmmStillstand.reduce((a,s)=>a+(s.dauerMin||0),0);
+
+  const isAdmin=userRolle==='Admin';
+  cont.innerHTML=`
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px">${machineCards}</div>
+    ${alertBanner}
+    ${isAdmin?`
+    <div style="display:grid;grid-template-columns:repeat(3,auto);gap:12px;margin-bottom:22px;width:fit-content">
+      <div class="stat-card"><div class="stat-label">Stillstände (30d)</div><div class="stat-val blue">${totalDown}</div></div>
+      <div class="stat-card"><div class="stat-label">Unnötig (QS wartete)</div><div class="stat-val red">${totalUnnötig}</div></div>
+      <div class="stat-card"><div class="stat-label">Gesamte Stillstandszeit</div><div class="stat-val" style="font-size:20px;margin-top:10px">${durStr(totalMinDown)}</div></div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-family:var(--mono);margin-bottom:10px">Stillstand-Historie (letzte 30 Tage)</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Start</th><th>Ende</th><th>Dauer</th><th>QS-Teile während Stillstand</th><th>Bewertung</th><th>Maschine</th></tr></thead>
+        <tbody>${histRows}</tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text3)">
+      💡 <strong>Okay</strong> = keine Teile in QS während Stillstand · <strong>Unnötig</strong> = Teile warteten, Maschine hätte laufen sollen
+    </div>`:''}
+  `;
+
+  // Update badge
+  const badge=document.getElementById('badge-monitoring');
+  if(badge)badge.textContent=totalUnnötig>0?'⚠ '+totalUnnötig:totalDown+'';
+}
+
+function checkCMMAlertBadge(){
+  if(userRolle!=='Admin')return;
+  const now=Date.now();
+  const qsNow=allParts.filter(p=>p.status==='Bauteil in QS').length;
+  const alert=cmmStatus.some(m=>{
+    const min=m.lastSignal?Math.floor((now-new Date(m.lastSignal).getTime())/60000):0;
+    return min>=15&&qsNow>0;
+  });
+  const tab=document.getElementById('tab-monitoring');
+  if(tab&&alert)tab.style.color='var(--p1)';
+  else if(tab)tab.style.color='';
+}
+// ── END CMM MONITORING ─────────────────────────────────────────────────────
+
 setInterval(async()=>{
   if(!msalInstance.getAllAccounts().length)return;
   try{
@@ -1087,6 +1250,8 @@ setInterval(async()=>{
     allParts=d.d.results.map(mapPart);
     renderList();
     if(document.getElementById('screen-archiv').classList.contains('active'))renderArchiv();
+    if(document.getElementById('screen-monitoring').classList.contains('active'))loadMonitoringData();
+    else checkCMMAlertBadge();
   }catch(e){console.warn('Auto-refresh Fehler:',e);}
 },30000);
 
