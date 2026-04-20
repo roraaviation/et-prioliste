@@ -247,7 +247,7 @@ td.mono{font-family:var(--mono);font-size:13px}
     <div id="archiv-container" style="display:none">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>P</th><th>Artikel-Nr</th><th>Bezeichnung</th><th>Maschine</th><th>Bereich</th><th>Status</th><th>Eingetroffen</th><th>Abgeschlossen</th><th>Dauer</th><th>Grund</th>${'<th></th>'}</tr></thead>
+          <thead><tr><th>P</th><th>Artikel-Nr</th><th>Bezeichnung</th><th>Maschine</th><th>Bereich</th><th>Status</th><th>Eingetroffen</th><th>Abgeschlossen</th><th>Dauer</th><th>Grund</th><th></th></tr></thead>
           <tbody id="archiv-tbody"></tbody>
         </table>
       </div>
@@ -1128,6 +1128,20 @@ async function loadMonitoringData(){
     const results=await Promise.all(fetches);
     cmmStatus=results[0].d.results.map(r=>({id:r.ID,maschine:r.Title,lastSignal:r.LastSignalZeit,status:r.CMMStatus}));
     cmmStillstand=isAdmin?results[1].d.results.map(r=>({id:r.ID,maschine:r.Title,startZeit:r.StartZeit,endZeit:r.EndZeit,dauerMin:r.DauerMinuten})):[];
+    // Einträge älter als 30 Tage löschen
+    if(isAdmin){
+      const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
+      const old=cmmStillstand.filter(s=>s.startZeit&&s.startZeit<cutoff);
+      cmmStillstand=cmmStillstand.filter(s=>!s.startZeit||s.startZeit>=cutoff);
+      for(const s of old){
+        try{
+          const digest=await getDigest();
+          await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STILLSTAND_LIST)}')/items(${s.id})`,{
+            method:'POST',headers:{'X-RequestDigest':digest,'X-HTTP-Method':'DELETE','IF-MATCH':'*'}
+          });
+        }catch(e){console.warn('Stillstand löschen Fehler:',e);}
+      }
+    }
   }catch(e){
     cmmStatus=[];cmmStillstand=[];
     console.warn('CMM-Daten Fehler:',e);
@@ -1205,9 +1219,6 @@ function renderMonitoring(){
     <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px">${machineCards}</div>
     ${alertBanner}
     ${isAdmin?`
-    <div style="display:grid;grid-template-columns:repeat(1,auto);gap:12px;margin-bottom:22px;width:fit-content">
-      <div class="stat-card"><div class="stat-label">Stillstände (30d)</div><div class="stat-val blue">${totalDown}</div></div>
-    </div>
     <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-family:var(--mono);margin-bottom:10px">Stillstand-Historie (letzte 30 Tage)</div>
     <div class="table-wrap">
       <table>
