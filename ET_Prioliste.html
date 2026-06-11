@@ -51,12 +51,13 @@ tbody tr.selected{background:#dce9f8}
 td{padding:14px 14px;font-size:14px;vertical-align:middle}
 td.mono{font-family:var(--mono);font-size:13px}
 .prio-badge{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:12px;font-weight:700;font-family:var(--mono)}
-.prio-1{background:var(--p1lt);color:var(--p1);border:1.5px solid var(--p1)}
+.prio-1{background:#e6f5ec;color:#1e7a3a;border:1.5px solid #1e7a3a}
 .prio-2{background:var(--p2lt);color:var(--p2);border:1.5px solid var(--accent)}
 .prio-3{background:var(--p3lt);color:var(--p3);border:1.5px solid var(--p3)}.prio-PK{background:#f0f0f0;color:#555;border:1.5px solid #999}.prio-WE{background:#e8f5ff;color:#1a9ae0;border:1.5px solid #1a9ae0}
 .status-badge{display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap}
 .s-angek{background:#f2f3f5;color:#888;border:1px solid #ddd}
 .s-qs{background:var(--p2lt);color:var(--accent);border:1px solid #bed5f0}
+.s-haend{background:#f0f4ff;color:#4a60b0;border:1px solid #c0ccee}
 .s-frei{background:var(--p3lt);color:var(--p3);border:1px solid #a8d8b8}
 .s-rueck{background:var(--p1lt);color:var(--p1);border:1px solid #f0b0b0}
 .bereich-badge{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
@@ -160,6 +161,8 @@ td.mono{font-family:var(--mono);font-size:13px}
 .scanner-action-btn{width:100%;padding:14px;border-radius:10px;font-size:15px;font-weight:500;font-family:var(--font);cursor:pointer;border:none;transition:all .15s}
 .scanner-action-primary{background:var(--accent);color:#fff}
 .scanner-action-primary:hover{background:var(--accent2)}
+.scanner-action-haend{background:var(--p3lt);color:var(--p3);border:1.5px solid var(--p3)}
+.scanner-action-haend:hover{background:#d0eedd}
 .scanner-multi{width:100%;display:none;flex-direction:column;gap:8px}
 .scanner-multi.show{display:flex}
 .scanner-multi-item{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:12px}
@@ -187,6 +190,7 @@ td.mono{font-family:var(--mono);font-size:13px}
   <div class="tabs">
     <button class="tab active" onclick="showTab('offen')" id="tab-offen">Offen <span class="tab-badge" id="badge-offen">–</span></button>
     <button class="tab" onclick="showTab('archiv')" id="tab-archiv">Archiv <span class="tab-badge" id="badge-archiv">–</span></button>
+    <button class="tab" onclick="showTab('monitoring')" id="tab-monitoring" style="display:none">CMM Monitoring <span class="tab-badge" id="badge-monitoring">–</span></button>
   </div>
 
   <div style="display:flex;align-items:center;gap:10px;padding:10px 28px;background:#fff;border-bottom:1px solid var(--border)" id="search-bar">
@@ -217,14 +221,15 @@ td.mono{font-family:var(--mono);font-size:13px}
         <button class="chip active" onclick="setStatusFilter('alle',this)" id="chip-s-alle">Alle</button>
         <button class="chip" onclick="setStatusFilter('Angekündigt',this)" id="chip-s-angek">Angekündigt</button>
         <button class="chip" onclick="setStatusFilter('Bauteil in QS',this)" id="chip-s-qs">Bauteil in QS</button>
-      <button class="chip" onclick="setStatusFilter('Rückgewiesen',this)" id="chip-s-rueck">Rückgewiesen</button>
+        <button class="chip" onclick="setStatusFilter('Rückgewiesen',this)" id="chip-s-rueck">Rückgewiesen</button>
       </div>
     </div>
     <div id="list-loading" class="loading"><div class="spinner"></div>Lade ET Prioliste...</div>
     <div id="list-container" style="display:none">
+      <div id="status-summary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>P</th><th>Artikel-Nr</th><th>Bezeichnung</th><th>Maschine</th><th>Bereich</th><th>Status</th><th>Geplante Ankunft</th><th>Seit</th><th>Notiz</th></tr></thead>
+          <thead><tr><th style="width:36px;text-align:center">#</th><th>P</th><th>Artikel-Nr</th><th>Bezeichnung</th><th>Maschine</th><th>Bereich</th><th>Status</th><th>Geplante Ankunft</th><th>Seit</th><th>Notiz</th></tr></thead>
           <tbody id="parts-tbody"></tbody>
         </table>
       </div>
@@ -242,12 +247,18 @@ td.mono{font-family:var(--mono);font-size:13px}
     <div id="archiv-container" style="display:none">
       <div class="table-wrap">
         <table>
-          <thead><tr><th>P</th><th>Artikel-Nr</th><th>Bezeichnung</th><th>Maschine</th><th>Bereich</th><th>Status</th><th>Eingetroffen</th><th>Abgeschlossen</th><th>Dauer</th><th>Grund</th></tr></thead>
+          <thead><tr><th>P</th><th>Artikel-Nr</th><th>Bezeichnung</th><th>Maschine</th><th>Bereich</th><th>Status</th><th>Eingetroffen</th><th>Abgeschlossen</th><th>Dauer</th><th>Grund</th><th></th></tr></thead>
           <tbody id="archiv-tbody"></tbody>
         </table>
       </div>
     </div>
   </div>
+</div>
+
+<!-- MONITORING SCREEN -->
+<div class="main screen" id="screen-monitoring">
+  <div id="monitoring-loading" class="loading"><div class="spinner"></div>Lade CMM-Daten...</div>
+  <div id="monitoring-content"></div>
 </div>
 
 <!-- SCANNER SCREEN -->
@@ -339,27 +350,31 @@ td.mono{font-family:var(--mono);font-size:13px}
     <button class="modal-close" onclick="closePrioModal()">✕</button>
     <div class="modal-title">Priorität ändern</div>
     <div id="prio-modal-info" style="font-size:14px;color:var(--text2);margin-bottom:16px"></div>
-    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-      <button onclick="setPrio('1')" style="flex:1;min-width:60px;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p1)';this.style.background='var(--p1lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
-        <div style="font-size:18px;font-weight:700;color:var(--p1);font-family:var(--mono)">1</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:3px">Höchste</div>
-      </button>
-      <button onclick="setPrio('2')" style="flex:1;min-width:60px;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p2)';this.style.background='var(--p2lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
-        <div style="font-size:18px;font-weight:700;color:var(--p2);font-family:var(--mono)">2</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:3px">Mittel</div>
-      </button>
-      <button onclick="setPrio('3')" style="flex:1;min-width:60px;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p3)';this.style.background='var(--p3lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
-        <div style="font-size:18px;font-weight:700;color:var(--p3);font-family:var(--mono)">3</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:3px">Niedrig</div>
-      </button>
-      <button onclick="setPrio('PK')" style="flex:1;min-width:60px;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='#666';this.style.background='#f5f5f5'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
-        <div style="font-size:18px;font-weight:700;color:#555;font-family:var(--mono)">PK</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:3px">Prozesskontrolle</div>
-      </button>
-      <button onclick="setPrio('WE')" style="flex:1;min-width:60px;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='#1a9ae0';this.style.background='#e8f5ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
-        <div style="font-size:18px;font-weight:700;color:#1a9ae0;font-family:var(--mono)">WE</div>
-        <div style="font-size:11px;color:var(--text2);margin-top:3px">Wochenende</div>
-      </button>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;gap:8px">
+        <button onclick="setPrio('1')" style="flex:1;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='#1e7a3a';this.style.background='#e6f5ec'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+          <div style="font-size:18px;font-weight:700;color:#1e7a3a;font-family:var(--mono)">1</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">Höchste</div>
+        </button>
+        <button onclick="setPrio('2')" style="flex:1;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p2)';this.style.background='var(--p2lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+          <div style="font-size:18px;font-weight:700;color:var(--p2);font-family:var(--mono)">2</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">Mittel</div>
+        </button>
+        <button onclick="setPrio('3')" style="flex:1;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='var(--p3)';this.style.background='var(--p3lt)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+          <div style="font-size:18px;font-weight:700;color:var(--p3);font-family:var(--mono)">3</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">Niedrig</div>
+        </button>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="setPrio('PK')" style="flex:1;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='#666';this.style.background='#f5f5f5'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+          <div style="font-size:18px;font-weight:700;color:#555;font-family:var(--mono)">PK</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">Prozesskontrolle</div>
+        </button>
+        <button onclick="setPrio('WE')" style="flex:1;padding:14px 8px;border-radius:var(--radius);border:2px solid var(--border);background:#fff;cursor:pointer;font-family:var(--font);transition:all .15s" onmouseover="this.style.borderColor='#1a9ae0';this.style.background='#e8f5ff'" onmouseout="this.style.borderColor='var(--border)';this.style.background='#fff'">
+          <div style="font-size:18px;font-weight:700;color:#1a9ae0;font-family:var(--mono)">WE</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">Wochenende</div>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -370,12 +385,14 @@ const CLIENT_ID  = '5d9b0308-6ee7-4d5f-9102-d25800ea909d';
 const TENANT_ID  = '37d2241e-ea62-4e1b-ae54-2578c0fda4d8';
 const SITE_URL   = 'https://roraaviation.sharepoint.com/sites/Quality-inspection';
 const LIST_NAME  = 'ET-Prioliste neu';
+const CMM_STATUS_LIST    = 'CMM-Status';
+const CMM_STILLSTAND_LIST= 'CMM-Stillstand';
 const F = {
   id:'ID',titel:'Title',bez:'Bauteilbezeichnung',machine:'Maschinennummer',
   bereich:'Fertigungsbereich',prio:'Priorit_x00e4_t',status:'Status',
   notiz:'Notiz',rueck:'R_x00fc_ckweisungsgrund',
   reihenfolge:'Reihenfolge',geplant:'GeplanteAnkunftszeit',angelegtVon:'Angelegt_von',geaendertVon:'Geaendert_von',letzteAenderung:'Letzte_Aenderung',ts_angek:'TS_Angek_x00fc_ndigt',ts_qs:'TS_Eingetroffen',
-  ts_abg:'TS_Abgeschlossen'
+  ts_haend:'TS_H_x00e4_ndische_Messung',ts_abg:'TS_Abgeschlossen'
 };
 const STATUS_FLOW={
   'Angekündigt':{next:['Bauteil in QS'],css:'s-angek'},
@@ -387,7 +404,10 @@ const msalConfig={auth:{clientId:CLIENT_ID,authority:`https://login.microsoftonl
 const msalInstance=new msal.PublicClientApplication(msalConfig);
 const scopes=['https://roraaviation.sharepoint.com/AllSites.Write'];
 let allParts=[],_scannerModalActive=false,currentFilter='alle',statusFilter='alle',selectedId=null,_listType=null,userRolle='Fertigung',userEmail='';
-
+let cmmStatus=[],cmmStillstand=[];
+function canAdmin(){return userRolle==='Admin'||userRolle==='Teamleiter';}
+function canQS(){return canAdmin()||userRolle==='QS';}
+function canTeamleiter(){return userRolle==='Admin'||userRolle==='Teamleiter';}
 async function init(){
   await msalInstance.initialize();
   const resp=await msalInstance.handleRedirectPromise();
@@ -425,9 +445,14 @@ async function loadRolle(){
     const entries=d.d.results;
     const me=entries.find(e=>(e.Title||'').toLowerCase()===userEmail);
     if(me&&me.Rolle)userRolle=me.Rolle;
-    // Show role badge in header
     const badge=document.getElementById('rolle-badge');
-    if(badge){badge.textContent=userRolle;badge.style.background=userRolle==='Admin'?'var(--p1lt)':userRolle==='QS'?'var(--p2lt)':'var(--p3lt)';badge.style.color=userRolle==='Admin'?'var(--p1)':userRolle==='QS'?'var(--p2)':'var(--p3)';}
+    const rolleColors={Admin:['var(--p1lt)','var(--p1)'],Teamleiter:['#fff0e0','#d06000'],QS:['var(--p2lt)','var(--p2)']};
+    const [bg,col]=rolleColors[userRolle]||['var(--p3lt)','var(--p3)'];
+    if(badge){badge.textContent=userRolle;badge.style.background=bg;badge.style.color=col;}
+    if(userRolle==='Admin'){
+      const mt=document.getElementById('tab-monitoring');
+      if(mt)mt.style.display='';
+    }
     if(userRolle==='Scanner'||new URLSearchParams(window.location.search).get('mode')==='scanner'){
       initScanner();
     } else {
@@ -439,8 +464,7 @@ async function loadRolle(){
     document.getElementById('search-bar').style.display='flex';
   }
 }
-function canAdmin(){return userRolle==='Admin';}
-function canQS(){return userRolle==='Admin'||userRolle==='QS';}
+function canAdmin_unused(){}
 
 async function loadParts(){
   try{
@@ -468,11 +492,12 @@ async function loadParts(){
       }
     }catch(e){}
     renderList();
+    renderDashboard();
   }catch(e){document.getElementById('list-loading').innerHTML=`<div style="color:var(--p1)">Fehler: ${e.message}</div>`;}
 }
 async function updateItem(id,data){const digest=await getDigest();const listType=await getListItemType();await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items(${id})`,{method:'POST',headers:{'Content-Type':'application/json;odata=verbose','X-RequestDigest':digest,'X-HTTP-Method':'MERGE','IF-MATCH':'*'},body:JSON.stringify({'__metadata':{'type':listType},...data})});}
 async function createItem(data){const digest=await getDigest();const listType=await getListItemType();return spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items`,{method:'POST',headers:{'Content-Type':'application/json;odata=verbose','X-RequestDigest':digest},body:JSON.stringify({'__metadata':{'type':listType},...data})});}
-function mapPart(r){return{id:r[F.id],nr:r[F.titel]||'',bez:r[F.bez]||'',machine:r[F.machine]||'',bereich:r[F.bereich]||'',prio:r[F.prio]||'3',status:r[F.status]||'Angekündigt',notiz:r[F.notiz]||'',rueck:r[F.rueck]||'',reihenfolge:r[F.reihenfolge]||100,geplant:r[F.geplant]||null,angelegtVon:r[F.angelegtVon]||'',geaendertVon:r[F.geaendertVon]||'',letzteAenderung:r[F.letzteAenderung]||'',ts_angek:r[F.ts_angek]||null,ts_qs:r[F.ts_qs]||null,ts_abg:r[F.ts_abg]||null};}
+function mapPart(r){return{id:r[F.id],nr:r[F.titel]||'',bez:r[F.bez]||'',machine:r[F.machine]||'',bereich:r[F.bereich]||'',prio:r[F.prio]||'3',status:r[F.status]||'Angekündigt',notiz:r[F.notiz]||'',rueck:r[F.rueck]||'',reihenfolge:r[F.reihenfolge]||100,geplant:r[F.geplant]||null,angelegtVon:r[F.angelegtVon]||'',geaendertVon:r[F.geaendertVon]||'',letzteAenderung:r[F.letzteAenderung]||'',ts_angek:r[F.ts_angek]||null,ts_qs:r[F.ts_qs]||null,ts_haend:r[F.ts_haend]||null,ts_abg:r[F.ts_abg]||null};}
 function prioGroup(p){if(p=='1'||p==1)return 0;if(p=='2'||p==2)return 1;if(p=='3'||p==3)return 2;if(p=='PK')return 3;if(p=='WE')return 4;return 5;}
 function prioScore(p,b){const g=prioGroup(p)*1000;const bScore=b==='Drehen'?0:b==='Fräsen'?1:2;return g+bScore;}
 function fmtTime(iso){if(!iso)return'–';const d=new Date(iso);return`${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;}
@@ -552,7 +577,8 @@ function renderList(){
     .sort((a,b)=>(b.ts_abg||'')>(a.ts_abg||'')?1:-1):[];
   document.getElementById('count-label').textContent=`${openParts.length} offen · ${doneTodayParts.length} heute fertig`;
   document.getElementById('badge-offen').textContent=allParts.filter(p=>{if(!DONE.includes(p.status))return true;const d=p.ts_abg?new Date(p.ts_abg).toDateString():null;return d===today;}).length;
-  const openRows=openParts.map(p=>`<tr draggable="${canAdmin()}" ondragstart="dragStart(event,${p.id})" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropOn(event,${p.id})" onclick="selectPart(${p.id})" class="${selectedId===p.id?'selected':''}" style="cursor:grab">
+  const openRows=openParts.map((p,idx)=>`<tr draggable="${canAdmin()}" ondragstart="dragStart(event,${p.id})" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropOn(event,${p.id})" onclick="selectPart(${p.id})" class="${selectedId===p.id?'selected':''}" style="cursor:grab">
+    <td class="mono" style="text-align:center;font-size:12px;color:var(--text3);font-weight:600;padding:14px 8px;min-width:36px">${idx+1}</td>
     <td><span class="prio-badge prio-${p.prio}">${p.prio}</span></td>
     <td class="mono" style="font-weight:600">${p.nr}</td><td>${p.bez}</td>
     <td class="mono">${p.machine}</td>
@@ -563,11 +589,12 @@ function renderList(){
     <td><span class="notiz-text">${p.notiz.includes("⚠")?"<span style='color:var(--p1);font-weight:600'>⚠ Rückweisung</span> "+p.notiz.replace(/⚠[^:]+:/,""):p.notiz}</span></td>
   </tr>`).join('');
   const separatorRow=doneTodayParts.length>0?`<tr style="pointer-events:none">
-    <td colspan="9" style="padding:6px 14px;background:#f0f4f8;border-top:2px solid var(--border2)">
+    <td colspan="10" style="padding:6px 14px;background:#f0f4f8;border-top:2px solid var(--border2)">
       <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-family:var(--mono)">✓ Heute abgeschlossen – ${doneTodayParts.length} ${doneTodayParts.length===1?'Teil':'Teile'}</span>
     </td>
   </tr>`:'';
   const doneRows=doneTodayParts.map(p=>`<tr onclick="selectPart(${p.id})" class="${selectedId===p.id?'selected':''}" style="opacity:0.65">
+    <td></td>
     <td><span class="prio-badge prio-${p.prio}">${p.prio}</span></td>
     <td class="mono" style="font-weight:600">${p.nr}</td><td>${p.bez}</td>
     <td class="mono">${p.machine}</td>
@@ -579,6 +606,8 @@ function renderList(){
   </tr>`).join('');
   document.getElementById('parts-tbody').innerHTML=openRows+separatorRow+doneRows;
   renderDetail();
+  renderStatusSummary();
+  if(document.getElementById('screen-dashboard')?.classList.contains('active'))renderDashboard();
 }
 
 function renderDetail(){
@@ -595,7 +624,7 @@ function renderDetail(){
     {label:'Geplant',val:p.geplant,key:'geplant'},
     {label:'Angekündigt',val:p.ts_angek,key:'ts_angek'},
     {label:'In QS',val:p.ts_qs,key:'ts_qs'},
-{label:'Abgeschlossen',val:p.ts_abg,key:'ts_abg'},
+    {label:'Abgeschlossen',val:p.ts_abg,key:'ts_abg'},
   ];
 
   cont.innerHTML=`<div class="detail-panel" style="margin-top:8px">
@@ -639,7 +668,7 @@ function renderDetail(){
     ${next.length>0?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border)">
       ${next.filter(s=>s!=='Freigegeben'&&s!=='Rückgewiesen').map(s=>`<button class="btn btn-primary" onclick="advanceStatus(${p.id},'${s}')">${s} →</button>`).join('')}
       ${next.filter(s=>s==='Freigegeben'||s==='Rückgewiesen').map(s=>`<button class="btn ${s==='Freigegeben'?'btn-success':'btn-danger'}" onclick="advanceStatus(${p.id},'${s}')">${s} →</button>`).join('')}
-      ${canAdmin()?`<button class="btn btn-sm" onclick="editPrio(${p.id})" style="margin-left:auto;color:var(--text3)">Prio ändern</button>`:''}
+      ${canAdmin()?`<button class="btn btn-sm" onclick="editPrio(${p.id})" style="margin-left:auto;color:var(--text3)">Prio ändern</button><button class="btn btn-danger btn-sm" onclick="deletePart(${p.id})">Löschen</button>`:''}
     </div>
     <div class="rueck-section" id="rueck-section">
       <label>Rückweisungsgrund *</label>
@@ -651,6 +680,7 @@ function renderDetail(){
     </div>`:`<div style="display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--border)">
       <span style="font-size:13px;color:${p.status==='Freigegeben'?'var(--p3)':'var(--p1)'};font-weight:600">${p.status==='Freigegeben'?'✓ Freigegeben':'✗ Rückgewiesen'}</span>
       ${p.status==='Rückgewiesen'?`<button class="btn btn-primary btn-sm" onclick="erneutMessen(${p.id})">Erneut messen →</button>`:''}
+      ${canAdmin()?`<button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="deletePart(${p.id})">Löschen</button>`:''}
     </div>`}
 
     <!-- Verlauf -->
@@ -706,8 +736,25 @@ async function setPrio(np){
     showToast('Priorität aktualisiert','ok');renderList();
   }catch(e){showToast('Fehler: '+e.message,'err');}
 }
+async function deletePart(id){
+  if(!canAdmin())return;
+  const p=allParts.find(x=>x.id===id);
+  if(!confirm(`Bauteil "${p?.nr||id}" wirklich unwiderruflich löschen?`))return;
+  try{
+    const digest=await getDigest();
+    await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items(${id})`,{
+      method:'POST',
+      headers:{'X-RequestDigest':digest,'X-HTTP-Method':'DELETE','IF-MATCH':'*'}
+    });
+    allParts=allParts.filter(x=>x.id!==id);
+    if(selectedId===id)selectedId=null;
+    showToast(`${p?.nr||id} gelöscht`,'ok');
+    renderList();
+    if(document.getElementById('screen-archiv').classList.contains('active'))renderArchiv();
+  }catch(e){showToast('Fehler beim Löschen: '+e.message,'err');}
+}
 function openModal(){document.getElementById('modal-overlay').classList.add('show');setTimeout(()=>document.getElementById('f-nr').focus(),100);}
-function closeModal(){document.getElementById('modal-overlay').classList.remove('show');clearForm();}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('show');document.querySelector('.scanner-body').style.visibility='visible';clearForm();}
 function closeModalOutside(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
 async function createPart(){
   const nr=document.getElementById('f-nr').value.trim();
@@ -761,11 +808,115 @@ function renderArchiv(){
     <td class="mono">${fmtDT(p.ts_qs)}</td><td class="mono">${fmtDT(p.ts_abg)}</td>
     <td class="mono" style="color:var(--accent);font-weight:600">${durStr(durMin(p.ts_qs,p.ts_abg))}</td>
     <td style="font-size:13px;color:var(--text2)">${p.rueck||''}</td>
+    <td>${canAdmin()?`<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deletePart(${p.id})">Löschen</button>`:''}</td>
   </tr>`).join('');
   document.getElementById('archiv-loading').style.display='none';
   document.getElementById('archiv-container').style.display='block';
 }
-function showTab(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.getElementById('screen-'+id).classList.add('active');document.getElementById('tab-'+id).classList.add('active');if(id==='archiv')renderArchiv();}
+function renderStatusSummary(){
+  const el=document.getElementById('status-summary');
+  if(!el)return;
+  const angek=allParts.filter(p=>p.status==='Angekündigt').length;
+  const qs=allParts.filter(p=>p.status==='Bauteil in QS').length;
+  const chip=(label,val,col,bg,border)=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 16px;background:${bg};border:1px solid ${border};border-radius:20px;font-size:13px;font-weight:500;color:${col}">
+    <span>${label}</span><span style="font-family:var(--mono);font-weight:700;font-size:15px">${val}</span>
+  </div>`;
+  el.innerHTML=
+    chip('Angekündigt',angek,'var(--text2)','#fff','var(--border)')+
+    chip('In QS',qs,'var(--accent)','var(--accentlt)','var(--accent)');
+}
+
+function showTab(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  document.getElementById('tab-'+id).classList.add('active');
+  document.getElementById('search-bar').style.display=(id==='offen')?'flex':'none';
+  if(id==='archiv')renderArchiv();
+  if(id==='monitoring')loadMonitoringData();
+}
+
+function renderDashboard(){
+  const cont=document.getElementById('dashboard-content');
+  if(!cont)return;
+  const now=new Date();
+  const todayStr=now.toDateString();
+  const shiftStart=new Date(now);
+  if(now.getHours()<6)shiftStart.setDate(shiftStart.getDate()-1);
+  shiftStart.setHours(6,0,0,0);
+
+  const angekuendigt=allParts.filter(p=>p.status==='Angekündigt');
+  const inQS=allParts.filter(p=>p.status==='Bauteil in QS');
+  const freigegeben=allParts.filter(p=>p.status==='Freigegeben'&&p.ts_abg&&new Date(p.ts_abg)>=shiftStart);
+  const rueckgewiesen=allParts.filter(p=>p.status==='Rückgewiesen'&&p.ts_abg&&new Date(p.ts_abg)>=shiftStart);
+  const prio1=allParts.filter(p=>!DONE.includes(p.status)&&p.prio==='1');
+
+  // Greeting
+  const h=now.getHours();
+  const gruss=h<10?'Guten Morgen':h<14?'Guten Tag':'Mahlzeit';
+
+  // CMM status for dashboard
+  const cmmCards=cmmStatus.length>0?cmmStatus.map(m=>{
+    const spStatus=(m.status||'').toLowerCase();
+    const isDown=spStatus==='gestoppt';
+    const col=isDown?'var(--p1)':'var(--p3)';
+    const bg=isDown?'var(--p1lt)':'var(--p3lt)';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:${bg};border-radius:6px;border:1px solid ${col}">
+      <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
+      <span style="font-size:13px;font-weight:600;font-family:var(--mono)">${m.maschine}</span>
+      <span style="font-size:12px;color:${col};margin-left:4px">${isDown?'Gestoppt':'Läuft'}</span>
+    </div>`;
+  }).join(''):'';
+
+  cont.innerHTML=`
+    <div style="margin-bottom:24px">
+      <div style="font-size:22px;font-weight:600;color:var(--text)">${gruss}</div>
+      <div style="font-size:13px;color:var(--text3);margin-top:4px">${now.toLocaleDateString('de-AT',{weekday:'long',day:'numeric',month:'long'})} · Schicht ab ${shiftStart.getHours()}:00 Uhr</div>
+    </div>
+
+    ${cmmStatus.length>0?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px">${cmmCards}</div>`:''}
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:28px">
+
+      <div onclick="showTab('offen')" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px 22px;cursor:pointer;box-shadow:var(--shadow);transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='var(--shadow)'">
+        <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);margin-bottom:10px">Angekündigt</div>
+        <div style="font-size:36px;font-weight:700;font-family:var(--mono);color:var(--text)">${angekuendigt.length}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:6px">warten auf Ankunft</div>
+      </div>
+
+      <div onclick="showTab('offen')" style="background:#fff;border:2px solid var(--accent);border-radius:12px;padding:20px 22px;cursor:pointer;box-shadow:var(--shadow);transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='var(--shadow)'">
+        <div style="font-size:11px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);margin-bottom:10px">In QS</div>
+        <div style="font-size:36px;font-weight:700;font-family:var(--mono);color:var(--accent)">${inQS.length}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:6px">liegen bereit</div>
+      </div>
+
+      <div onclick="showTab('archiv')" style="background:var(--p3lt);border:1px solid var(--p3);border-radius:12px;padding:20px 22px;cursor:pointer;box-shadow:var(--shadow);transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='var(--shadow)'">
+        <div style="font-size:11px;font-weight:600;color:var(--p3);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);margin-bottom:10px">Freigegeben heute</div>
+        <div style="font-size:36px;font-weight:700;font-family:var(--mono);color:var(--p3)">${freigegeben.length}</div>
+        <div style="font-size:12px;color:var(--p3);margin-top:6px">diese Schicht</div>
+      </div>
+
+      <div onclick="showTab('archiv')" style="background:var(--p1lt);border:1px solid var(--p1);border-radius:12px;padding:20px 22px;cursor:pointer;box-shadow:var(--shadow);transition:box-shadow .15s" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,.1)'" onmouseout="this.style.boxShadow='var(--shadow)'">
+        <div style="font-size:11px;font-weight:600;color:var(--p1);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);margin-bottom:10px">Rückgewiesen heute</div>
+        <div style="font-size:36px;font-weight:700;font-family:var(--mono);color:var(--p1)">${rueckgewiesen.length}</div>
+        <div style="font-size:12px;color:var(--p1);margin-top:6px">diese Schicht</div>
+      </div>
+
+    </div>
+
+    ${prio1.length>0?`
+    <div style="background:var(--p1lt);border:1px solid var(--p1);border-radius:var(--radius);padding:14px 18px;margin-bottom:20px">
+      <div style="font-size:12px;font-weight:700;color:var(--p1);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);margin-bottom:10px">⚡ Prio 1 – Sofort messen</div>
+      ${prio1.map(p=>`<div onclick="showTab('offen')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(214,59,59,.15);cursor:pointer">
+        <span class="prio-badge prio-1">1</span>
+        <span style="font-family:var(--mono);font-weight:700">${p.nr}</span>
+        <span style="font-size:13px;color:var(--text2)">${p.bez}</span>
+        <span style="margin-left:auto;font-size:12px;color:var(--text3)">Maschine ${p.machine}</span>
+        <span class="status-badge ${sCss(p.status)}">${p.status}</span>
+      </div>`).join('')}
+    </div>`:''}
+  `;
+}
 function setStatusFilter(s,btn){try{localStorage.setItem('et_status',s);}catch(e){}statusFilter=s;['chip-s-alle','chip-s-angek','chip-s-qs','chip-s-rueck'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active')});btn.classList.add('active');selectedId=null;renderList();}
 function setFilter(f,btn){try{localStorage.setItem('et_bereich',f);}catch(e){}currentFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');selectedId=null;renderList();}
 let toastTimer;
@@ -985,6 +1136,8 @@ function showScannerResult(p){
   const area=document.getElementById('sc-action-area');
   if(p.status==='Angekündigt'){
     area.innerHTML=`<button class="scanner-action-btn scanner-action-primary" onclick="scannerAdvance('Bauteil in QS')">Bauteil in QS einbuchen →</button>`;
+  } else if(p.status==='Bauteil in QS'){
+    area.innerHTML=`<div style="text-align:center;padding:10px;font-size:14px;color:var(--text2)">Status: <strong>Bauteil in QS</strong> – keine Aktion im Scanner möglich</div>`;
   } else {
     area.innerHTML=`<div style="text-align:center;padding:10px;font-size:14px;color:var(--text2)">Status: <strong>${p.status}</strong> – keine Aktion möglich</div>`;
   }
@@ -1006,7 +1159,6 @@ async function scannerAdvance(newStatus){
     await updateItem(p.id,patch);
     p.status=newStatus;
     if(patch[F.ts_qs])p.ts_qs=now;
-    
     
     // Show success
     const area=document.getElementById('sc-action-area');
@@ -1038,11 +1190,156 @@ function scannerCreateNew(){
 }
 function openScannerModal(){
   document.getElementById('modal-overlay').classList.add('show');
-  // After save, stay on scanner
+  document.querySelector('.scanner-body').style.visibility='hidden';
   _scannerModalActive=true;
   setTimeout(()=>document.getElementById('f-nr').focus(),100);
 }
 
+
+// ── CMM MONITORING ────────────────────────────────────────────────────────
+function calcQSPartsAtTime(startIso, endIso){
+  const s=new Date(startIso).getTime();
+  const e=endIso?new Date(endIso).getTime():Date.now();
+  return allParts.filter(p=>{
+    if(!p.ts_qs)return false;
+    const enter=new Date(p.ts_qs).getTime();
+    const leave=p.ts_abg?new Date(p.ts_abg).getTime():Infinity;
+    return enter<=e && leave>=s;
+  }).length;
+}
+
+async function loadMonitoringData(){
+  if(userRolle!=='Admin')return;
+  document.getElementById('monitoring-loading').style.display='flex';
+  document.getElementById('monitoring-content').style.display='none';
+  try{
+    const isAdmin=userRolle==='Admin';
+    const fetches=[
+      spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STATUS_LIST)}')/items?$select=ID,Title,LastSignalZeit,CMMStatus&$top=50`)
+    ];
+    if(isAdmin)fetches.push(spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STILLSTAND_LIST)}')/items?$select=ID,Title,StartZeit,EndZeit,DauerMinuten&$top=200&$orderby=StartZeit%20desc`));
+    const results=await Promise.all(fetches);
+    cmmStatus=results[0].d.results.map(r=>({id:r.ID,maschine:r.Title,lastSignal:r.LastSignalZeit,status:r.CMMStatus}));
+    cmmStillstand=isAdmin?results[1].d.results.map(r=>({id:r.ID,maschine:r.Title,startZeit:r.StartZeit,endZeit:r.EndZeit,dauerMin:r.DauerMinuten})):[];
+    // Einträge älter als 30 Tage löschen
+    if(isAdmin){
+      const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
+      const old=cmmStillstand.filter(s=>s.startZeit&&s.startZeit<cutoff);
+      cmmStillstand=cmmStillstand.filter(s=>!s.startZeit||s.startZeit>=cutoff);
+      for(const s of old){
+        try{
+          const digest=await getDigest();
+          await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STILLSTAND_LIST)}')/items(${s.id})`,{
+            method:'POST',headers:{'X-RequestDigest':digest,'X-HTTP-Method':'DELETE','IF-MATCH':'*'}
+          });
+        }catch(e){console.warn('Stillstand löschen Fehler:',e);}
+      }
+    }
+  }catch(e){
+    cmmStatus=[];cmmStillstand=[];
+    console.warn('CMM-Daten Fehler:',e);
+  }
+  document.getElementById('monitoring-loading').style.display='none';
+  document.getElementById('monitoring-content').style.display='block';
+  renderMonitoring();
+}
+
+function renderMonitoring(){
+  const cont=document.getElementById('monitoring-content');
+  if(!cont||cont.style.display==='none')return;
+  const now=Date.now();
+  const qsNow=allParts.filter(p=>p.status==='Bauteil in QS').length;
+
+  // Machine status cards
+  const machineCards=cmmStatus.length===0
+    ?'<div style="color:var(--text3);font-size:13px;padding:12px 0">Keine Maschinendaten – SharePoint-Liste "CMM-Status" prüfen.</div>'
+    :cmmStatus.map(m=>{
+      const lastMs=m.lastSignal?new Date(m.lastSignal.endsWith('Z')?m.lastSignal:m.lastSignal+'Z').getTime():0;
+      const minAgo=Math.floor((now-lastMs)/60000);
+      const spStatus=(m.status||'').toLowerCase();
+      const isDown=spStatus==='gestoppt'||minAgo>=5;
+      const isAlert=isDown&&minAgo>=15&&qsNow>0;
+      const col=isAlert?'var(--p1)':isDown?'#888':'var(--p3)';
+      const bg=isAlert?'var(--p1lt)':isDown?'var(--bg3)':'var(--p3lt)';
+      const label=isAlert?'⚠ Stillstand!':isDown?'Gestoppt':'Läuft';
+      const minStr=minAgo<60?minAgo+' min':Math.floor(minAgo/60)+'h '+minAgo%60+'m';
+      return `<div style="background:#fff;border:2px solid ${col};border-radius:10px;padding:16px 20px;min-width:230px;box-shadow:var(--shadow);flex:1;max-width:300px">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
+          <div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0${isAlert?';animation:spin .8s linear infinite':''}"></div>
+          <span style="font-weight:700;font-family:var(--mono);font-size:15px">${m.maschine}</span>
+          <span style="margin-left:auto;font-size:11px;font-weight:600;padding:2px 9px;border-radius:12px;background:${bg};color:${col}">${label}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text2)">Letztes Signal: <strong>${m.lastSignal?fmtDT(m.lastSignal):'–'}</strong></div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">Vor <strong>${minStr}</strong></div>
+        ${isAlert?`<div style="margin-top:10px;padding:7px 11px;background:var(--p1lt);border-radius:6px;font-size:12px;color:var(--p1);font-weight:600">⚠ ${qsNow} Bauteil${qsNow>1?'e warten':'wartet'} in QS!</div>`:''}
+      </div>`;
+    }).join('');
+
+  // Global alert banner
+  const machineAlert=cmmStatus.some(m=>{
+    const min=m.lastSignal?Math.floor((now-new Date(m.lastSignal).getTime())/60000):999;
+    return min>=15;
+  })&&qsNow>0;
+  const alertBanner=machineAlert?`<div style="background:var(--p1lt);border:2px solid var(--p1);border-radius:var(--radius);padding:14px 20px;margin-bottom:18px;display:flex;align-items:center;gap:14px">
+    <span style="font-size:24px;flex-shrink:0">⚠</span>
+    <div>
+      <div style="font-weight:700;color:var(--p1);font-size:15px">Maschine steht – Teile warten!</div>
+      <div style="font-size:13px;color:var(--p1);margin-top:3px">${qsNow} Bauteil${qsNow>1?'e sind':'ist'} in der QS-Queue, aber die CMM läuft nicht. Bitte nachsehen!</div>
+    </div>
+  </div>`:'';
+
+  // History table with QS correlation
+  const histRows=cmmStillstand.length===0
+    ?'<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">Keine Stillstandsdaten vorhanden</td></tr>'
+    :cmmStillstand.map(s=>{
+      const qs=calcQSPartsAtTime(s.startZeit,s.endZeit);
+      const ok=qs===0;
+      return `<tr>
+        <td class="mono" style="font-size:12px">${fmtDT(s.startZeit)}</td>
+        <td class="mono" style="font-size:12px">${s.endZeit?fmtDT(s.endZeit):'<em style="color:var(--p1)">läuft noch</em>'}</td>
+        <td class="mono" style="font-weight:700;color:var(--accent)">${durStr(s.dauerMin)}</td>
+        <td style="text-align:center;font-family:var(--mono);font-weight:700;color:${qs>0?'var(--p1)':'var(--text3)'}">${qs}</td>
+        <td class="mono" style="font-size:12px;color:var(--text2)">${s.maschine}</td>
+      </tr>`;
+    }).join('');
+
+  // Stats
+  const totalDown=cmmStillstand.length;
+  const totalUnnötig=cmmStillstand.filter(s=>calcQSPartsAtTime(s.startZeit,s.endZeit)>0).length;
+  const totalMinDown=cmmStillstand.reduce((a,s)=>a+(s.dauerMin||0),0);
+
+  const isAdmin=userRolle==='Admin';
+  cont.innerHTML=`
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px">${machineCards}</div>
+    ${alertBanner}
+    ${isAdmin?`
+    <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-family:var(--mono);margin-bottom:10px">Stillstand-Historie (letzte 30 Tage)</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Start</th><th>Ende</th><th>Dauer</th><th style="text-align:center">QS-Teile während Stillstand</th><th>Maschine</th></tr></thead>
+        <tbody>${histRows}</tbody>
+      </table>
+    </div>`:''}
+  `;
+
+  // Update badge
+  const badge=document.getElementById('badge-monitoring');
+  if(badge)badge.textContent=totalUnnötig>0?'⚠ '+totalUnnötig:totalDown+'';
+}
+
+function checkCMMAlertBadge(){
+  if(userRolle!=='Admin')return;
+  const now=Date.now();
+  const qsNow=allParts.filter(p=>p.status==='Bauteil in QS').length;
+  const alert=cmmStatus.some(m=>{
+    const min=m.lastSignal?Math.floor((now-new Date(m.lastSignal).getTime())/60000):0;
+    return min>=15&&qsNow>0;
+  });
+  const tab=document.getElementById('tab-monitoring');
+  if(tab&&alert)tab.style.color='var(--p1)';
+  else if(tab)tab.style.color='';
+}
+// ── END CMM MONITORING ─────────────────────────────────────────────────────
 
 setInterval(async()=>{
   if(!msalInstance.getAllAccounts().length)return;
@@ -1052,6 +1349,8 @@ setInterval(async()=>{
     allParts=d.d.results.map(mapPart);
     renderList();
     if(document.getElementById('screen-archiv').classList.contains('active'))renderArchiv();
+    if(document.getElementById('screen-monitoring').classList.contains('active'))loadMonitoringData();
+    else checkCMMAlertBadge();
   }catch(e){console.warn('Auto-refresh Fehler:',e);}
 },30000);
 
