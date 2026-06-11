@@ -471,6 +471,19 @@ async function loadParts(){
     const sel=Object.values(F).join(',');
     const d=await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items?$select=${sel}&$top=500&$orderby=ID desc`);
     allParts=d.d.results.map(mapPart);
+    // Auto-Migration: alle "Händische Messung" Einträge auf "Bauteil in QS" zurücksetzen
+    const toMigrate=allParts.filter(p=>p.status==='Händische Messung');
+    if(toMigrate.length>0&&canAdmin()){
+      for(const p of toMigrate){
+        try{
+          await updateItem(p.id,{[F.status]:'Bauteil in QS',[F.letzteAenderung]:'Migration: Händisch → QS'});
+          p.status='Bauteil in QS';
+        }catch(e){console.warn('Migration Fehler für',p.nr,e);}
+      }
+    } else {
+      // Wenn nicht-Admin, im UI trotzdem als "Bauteil in QS" anzeigen
+      toMigrate.forEach(p=>p.status='Bauteil in QS');
+    }
     document.getElementById('list-loading').style.display='none';
     document.getElementById('list-container').style.display='block';
     document.getElementById('badge-archiv').textContent=allParts.filter(p=>DONE.includes(p.status)).length;
