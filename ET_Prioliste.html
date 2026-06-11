@@ -617,7 +617,13 @@ function renderList(){
     <td class="mono" style="color:var(--text2)">${fmtTime(p.ts_abg)}</td>
     <td><span class="notiz-text">${p.notiz.includes("⚠")?"<span style='color:var(--p1);font-weight:600'>⚠ Rückweisung</span> "+p.notiz.replace(/⚠[^:]+:/,""):p.notiz}</span></td>
   </tr>`).join('');
-  document.getElementById('parts-tbody').innerHTML=openRows+separatorRow+doneRows;
+  const newHtml=openRows+separatorRow+doneRows;
+  const tbody=document.getElementById('parts-tbody');
+  if(tbody.innerHTML!==newHtml){
+    const scrollY=window.scrollY;
+    tbody.innerHTML=newHtml;
+    window.scrollTo({top:scrollY,behavior:'instant'});
+  }
   renderDetail();
   renderStatusSummary();
   if(document.getElementById('screen-dashboard')?.classList.contains('active'))renderDashboard();
@@ -1234,6 +1240,7 @@ async function loadMonitoringData(){
     const results=await Promise.all(fetches);
     cmmStatus=results[0].d.results.map(r=>({id:r.ID,maschine:r.Title,lastSignal:r.LastSignalZeit,status:r.CMMStatus}));
     cmmStillstand=isAdmin?results[1].d.results.map(r=>({id:r.ID,maschine:r.Title,startZeit:r.StartZeit,endZeit:r.EndZeit,dauerMin:r.DauerMinuten})):[];
+    cmmStillstand.sort((a,b)=>new Date(b.startZeit||0)-new Date(a.startZeit||0));
     // Einträge älter als 30 Tage löschen
     if(isAdmin){
       const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
@@ -1354,18 +1361,28 @@ function checkCMMAlertBadge(){
 }
 // ── END CMM MONITORING ─────────────────────────────────────────────────────
 
-setInterval(async()=>{
+let _lastModified=null;
+async function quickCheckChanges(){
   if(!msalInstance.getAllAccounts().length)return;
   try{
-    const sel=Object.values(F).join(',');
-    const d=await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items?$select=${sel}&$top=500&$orderby=ID desc`);
-    allParts=d.d.results.map(mapPart);
-    renderList();
-    if(document.getElementById('screen-archiv').classList.contains('active'))renderArchiv();
-    if(document.getElementById('screen-monitoring').classList.contains('active'))loadMonitoringData();
-    else checkCMMAlertBadge();
-  }catch(e){console.warn('Auto-refresh Fehler:',e);}
-},30000);
+    const d=await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items?$select=Modified&$top=1&$orderby=Modified desc`);
+    const latestMod=d.d.results[0]?.Modified;
+    if(latestMod&&latestMod!==_lastModified){
+      if(_lastModified!==null){
+        // Etwas hat sich geändert - vollständig neu laden
+        const sel=Object.values(F).join(',');
+        const full=await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items?$select=${sel}&$top=500&$orderby=ID desc`);
+        allParts=full.d.results.map(mapPart);
+        renderList();
+        if(document.getElementById('screen-archiv').classList.contains('active'))renderArchiv();
+        if(document.getElementById('screen-monitoring').classList.contains('active'))loadMonitoringData();
+        else checkCMMAlertBadge();
+      }
+      _lastModified=latestMod;
+    }
+  }catch(e){console.warn('Quick-Check Fehler:',e);}
+}
+setInterval(quickCheckChanges,4000);
 
 init();
 </script>
