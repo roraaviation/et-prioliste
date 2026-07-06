@@ -221,6 +221,7 @@ td.mono{font-family:var(--mono);font-size:13px}
         <button class="chip active" onclick="setStatusFilter('alle',this)" id="chip-s-alle">Alle</button>
         <button class="chip" onclick="setStatusFilter('Angekündigt',this)" id="chip-s-angek">Angekündigt</button>
         <button class="chip" onclick="setStatusFilter('Bauteil in QS',this)" id="chip-s-qs">Bauteil in QS</button>
+        <button class="chip" onclick="setStatusFilter('Händische Messung',this)" id="chip-s-haend">Händische Messung</button>
         <button class="chip" onclick="setStatusFilter('Rückgewiesen',this)" id="chip-s-rueck">Rückgewiesen</button>
       </div>
     </div>
@@ -396,7 +397,8 @@ const F = {
 };
 const STATUS_FLOW={
   'Angekündigt':{next:['Bauteil in QS'],css:'s-angek'},
-  'Bauteil in QS':{next:['Freigegeben','Rückgewiesen'],css:'s-qs'},
+  'Bauteil in QS':{next:['Händische Messung','Freigegeben','Rückgewiesen'],css:'s-qs'},
+  'Händische Messung':{next:['Freigegeben','Rückgewiesen'],css:'s-haend'},
   'Freigegeben':{next:[],css:'s-frei'},'Rückgewiesen':{next:[],css:'s-rueck'}
 };
 const DONE=['Freigegeben','Rückgewiesen'];
@@ -471,19 +473,6 @@ async function loadParts(){
     const sel=Object.values(F).join(',');
     const d=await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items?$select=${sel}&$top=500&$orderby=ID desc`);
     allParts=d.d.results.map(mapPart);
-    // Auto-Migration: alle "Händische Messung" Einträge auf "Bauteil in QS" zurücksetzen
-    const toMigrate=allParts.filter(p=>p.status==='Händische Messung');
-    if(toMigrate.length>0&&canAdmin()){
-      for(const p of toMigrate){
-        try{
-          await updateItem(p.id,{[F.status]:'Bauteil in QS',[F.letzteAenderung]:'Migration: Händisch → QS'});
-          p.status='Bauteil in QS';
-        }catch(e){console.warn('Migration Fehler für',p.nr,e);}
-      }
-    } else {
-      // Wenn nicht-Admin, im UI trotzdem als "Bauteil in QS" anzeigen
-      toMigrate.forEach(p=>p.status='Bauteil in QS');
-    }
     document.getElementById('list-loading').style.display='none';
     document.getElementById('list-container').style.display='block';
     document.getElementById('badge-archiv').textContent=allParts.filter(p=>DONE.includes(p.status)).length;
@@ -499,9 +488,9 @@ async function loadParts(){
       }
       if(savedStatus&&savedStatus!=='alle'){
         statusFilter=savedStatus;
-        const statusMap={'Angekündigt':'chip-s-angek','Bauteil in QS':'chip-s-qs','Rückgewiesen':'chip-s-rueck'};
+        const statusMap={'Angekündigt':'chip-s-angek','Bauteil in QS':'chip-s-qs','Händische Messung':'chip-s-haend','Rückgewiesen':'chip-s-rueck'};
         const btnId=statusMap[savedStatus];
-        if(btnId){const btn=document.getElementById(btnId);if(btn){document.querySelectorAll('.chip').forEach(c=>{if(['chip-s-alle','chip-s-angek','chip-s-qs','chip-s-rueck'].includes(c.id))c.classList.remove('active')});btn.classList.add('active');document.getElementById('chip-s-alle').classList.remove('active');}}
+        if(btnId){const btn=document.getElementById(btnId);if(btn){document.querySelectorAll('.chip').forEach(c=>{if(['chip-s-alle','chip-s-angek','chip-s-qs','chip-s-haend','chip-s-rueck'].includes(c.id))c.classList.remove('active')});btn.classList.add('active');document.getElementById('chip-s-alle').classList.remove('active');}}
       }
     }catch(e){}
     renderList();
@@ -643,6 +632,7 @@ function renderDetail(){
     {label:'Geplant',val:p.geplant,key:'geplant'},
     {label:'Angekündigt',val:p.ts_angek,key:'ts_angek'},
     {label:'In QS',val:p.ts_qs,key:'ts_qs'},
+    {label:'Händisch',val:p.ts_haend,key:'ts_haend'},
     {label:'Abgeschlossen',val:p.ts_abg,key:'ts_abg'},
   ];
 
@@ -725,12 +715,13 @@ async function doStatus(id,newStatus,rueck){
   const userName=document.getElementById('user-name').textContent;
   const patch={[F.status]:newStatus,[F.geaendertVon]:userName,[F.letzteAenderung]:'Status → '+newStatus};
   if(newStatus==='Bauteil in QS')patch[F.ts_qs]=now;
+  if(newStatus==='Händische Messung')patch[F.ts_haend]=now;
   if(DONE.includes(newStatus))patch[F.ts_abg]=now;
   if(rueck)patch[F.rueck]=rueck;
   try{
     await updateItem(id,patch);
     const p=allParts.find(x=>x.id===id);
-    if(p){p.status=newStatus;if(patch[F.ts_qs])p.ts_qs=now;if(patch[F.ts_abg])p.ts_abg=now;if(rueck)p.rueck=rueck;}
+    if(p){p.status=newStatus;if(patch[F.ts_qs])p.ts_qs=now;if(patch[F.ts_haend])p.ts_haend=now;if(patch[F.ts_abg])p.ts_abg=now;if(rueck)p.rueck=rueck;}
     if(DONE.includes(newStatus)){selectedId=null;document.getElementById('badge-archiv').textContent=allParts.filter(p=>DONE.includes(p.status)).length;}
     showToast(`Status: ${newStatus}`,'ok');renderList();
   }catch(e){showToast('Fehler: '+e.message,'err');}
@@ -837,12 +828,14 @@ function renderStatusSummary(){
   if(!el)return;
   const angek=allParts.filter(p=>p.status==='Angekündigt').length;
   const qs=allParts.filter(p=>p.status==='Bauteil in QS').length;
+  const haend=allParts.filter(p=>p.status==='Händische Messung').length;
   const chip=(label,val,col,bg,border)=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 16px;background:${bg};border:1px solid ${border};border-radius:20px;font-size:13px;font-weight:500;color:${col}">
     <span>${label}</span><span style="font-family:var(--mono);font-weight:700;font-size:15px">${val}</span>
   </div>`;
   el.innerHTML=
     chip('Angekündigt',angek,'var(--text2)','#fff','var(--border)')+
-    chip('In QS',qs,'var(--accent)','var(--accentlt)','var(--accent)');
+    chip('In QS',qs,'var(--accent)','var(--accentlt)','var(--accent)')+
+    chip('Händische Messung',haend,'#4a60b0','#f0f4ff','#c0ccee');
 }
 
 function showTab(id){
@@ -936,7 +929,7 @@ function renderDashboard(){
     </div>`:''}
   `;
 }
-function setStatusFilter(s,btn){try{localStorage.setItem('et_status',s);}catch(e){}statusFilter=s;['chip-s-alle','chip-s-angek','chip-s-qs','chip-s-rueck'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active')});btn.classList.add('active');selectedId=null;renderList();}
+function setStatusFilter(s,btn){try{localStorage.setItem('et_status',s);}catch(e){}statusFilter=s;['chip-s-alle','chip-s-angek','chip-s-qs','chip-s-haend','chip-s-rueck'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active')});btn.classList.add('active');selectedId=null;renderList();}
 function setFilter(f,btn){try{localStorage.setItem('et_bereich',f);}catch(e){}currentFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');selectedId=null;renderList();}
 let toastTimer;
 function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast show ${type}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}
@@ -1156,7 +1149,7 @@ function showScannerResult(p){
   if(p.status==='Angekündigt'){
     area.innerHTML=`<button class="scanner-action-btn scanner-action-primary" onclick="scannerAdvance('Bauteil in QS')">Bauteil in QS einbuchen →</button>`;
   } else if(p.status==='Bauteil in QS'){
-    area.innerHTML=`<div style="text-align:center;padding:10px;font-size:14px;color:var(--text2)">Status: <strong>Bauteil in QS</strong> – keine Aktion im Scanner möglich</div>`;
+    area.innerHTML=`<button class="scanner-action-btn scanner-action-haend" onclick="scannerAdvance('Händische Messung')">Händische Messung →</button>`;
   } else {
     area.innerHTML=`<div style="text-align:center;padding:10px;font-size:14px;color:var(--text2)">Status: <strong>${p.status}</strong> – keine Aktion möglich</div>`;
   }
@@ -1173,11 +1166,13 @@ async function scannerAdvance(newStatus){
   const userName=document.getElementById('user-name').textContent;
   const patch={[F.status]:newStatus,[F.geaendertVon]:userName,[F.letzteAenderung]:'Status → '+newStatus};
   if(newStatus==='Bauteil in QS')patch[F.ts_qs]=now;
+  if(newStatus==='Händische Messung')patch[F.ts_haend]=now;
   
   try{
     await updateItem(p.id,patch);
     p.status=newStatus;
     if(patch[F.ts_qs])p.ts_qs=now;
+    if(patch[F.ts_haend])p.ts_haend=now;
     
     // Show success
     const area=document.getElementById('sc-action-area');
@@ -1222,7 +1217,7 @@ function calcQSPartsAtTime(startIso, endIso){
   return allParts.filter(p=>{
     if(!p.ts_qs)return false;
     const enter=new Date(p.ts_qs).getTime();
-    const leave=p.ts_abg?new Date(p.ts_abg).getTime():Infinity;
+    const leave=p.ts_haend?new Date(p.ts_haend).getTime():(p.ts_abg?new Date(p.ts_abg).getTime():Infinity);
     return enter<=e && leave>=s;
   }).length;
 }
