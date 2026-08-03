@@ -1233,7 +1233,7 @@ async function loadMonitoringData(){
     ];
     if(isAdmin)fetches.push(spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STILLSTAND_LIST)}')/items?$select=ID,Title,StartZeit,EndZeit,DauerMinuten&$top=200&$orderby=StartZeit%20desc`));
     const results=await Promise.all(fetches);
-    cmmStatus=results[0].d.results.map(r=>({id:r.ID,maschine:r.Title,lastSignal:r.LastSignalZeit,status:r.CMMStatus}));
+    cmmStatus=results[0].d.results.map(r=>({id:r.ID,maschine:r.Title,lastSignal:r.LastSignalZeit,status:r.CMMStatus,letzteAktivitaet:r.LetzteAktivitaet||null}));
     cmmStillstand=isAdmin?results[1].d.results.map(r=>({id:r.ID,maschine:r.Title,startZeit:r.StartZeit,endZeit:r.EndZeit,dauerMin:r.DauerMinuten})):[];
     cmmStillstand.sort((a,b)=>new Date(b.startZeit||0)-new Date(a.startZeit||0));
     // Einträge älter als 30 Tage löschen
@@ -1272,20 +1272,37 @@ function renderMonitoring(){
       const lastMs=m.lastSignal?new Date(m.lastSignal.endsWith('Z')?m.lastSignal:m.lastSignal+'Z').getTime():0;
       const minAgo=Math.floor((now-lastMs)/60000);
       const spStatus=(m.status||'').toLowerCase();
-      const isDown=spStatus==='gestoppt'||minAgo>=5;
+      const isOffline=minAgo>=5;
+      const isDown=spStatus==='gestoppt'||isOffline;
       const isAlert=isDown&&minAgo>=15&&qsNow>0;
-      const col=isAlert?'var(--p1)':isDown?'#888':'var(--p3)';
-      const bg=isAlert?'var(--p1lt)':isDown?'var(--bg3)':'var(--p3lt)';
-      const label=isAlert?'⚠ Stillstand!':isDown?'Gestoppt':'Läuft';
-      const minStr=minAgo<60?minAgo+' min':Math.floor(minAgo/60)+'h '+minAgo%60+'m';
-      return `<div style="background:#fff;border:2px solid ${col};border-radius:10px;padding:16px 20px;min-width:230px;box-shadow:var(--shadow);flex:1;max-width:300px">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">
-          <div style="width:10px;height:10px;border-radius:50%;background:${col};flex-shrink:0${isAlert?';animation:spin .8s linear infinite':''}"></div>
-          <span style="font-weight:700;font-family:var(--mono);font-size:15px">${m.maschine}</span>
-          <span style="margin-left:auto;font-size:11px;font-weight:600;padding:2px 9px;border-radius:12px;background:${bg};color:${col}">${label}</span>
+
+      // Verbindungsstatus
+      const connCol=isOffline?'#888':'var(--p3)';
+      const connBg=isOffline?'var(--bg3)':'var(--p3lt)';
+      const connLabel=isOffline?'Offline':'Online';
+
+      // Maschinenstatus
+      const machCol=isAlert?'var(--p1)':isDown?'#e08800':'var(--p3)';
+      const machBg=isAlert?'var(--p1lt)':isDown?'#fff8e6':'var(--p3lt)';
+      const machLabel=isDown?'Gestoppt':'Läuft';
+
+      // Letzte Bewegung
+      const letzteAkt=m.letzteAktivitaet||m.lastSignal;
+      const letzteAktMs=letzteAkt?new Date(letzteAkt.endsWith('Z')?letzteAkt:letzteAkt+'Z').getTime():0;
+      const bewegungMinAgo=letzteAktMs?Math.floor((now-letzteAktMs)/60000):null;
+      const bewegungStr=bewegungMinAgo!==null?(bewegungMinAgo<60?bewegungMinAgo+' min':Math.floor(bewegungMinAgo/60)+'h '+bewegungMinAgo%60+'m'):null;
+
+      return `<div style="background:#fff;border:2px solid ${isAlert?'var(--p1)':isDown?'#e08800':'var(--p3)'};border-radius:10px;padding:16px 20px;min-width:250px;box-shadow:var(--shadow);flex:1;max-width:320px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+          <span style="font-weight:700;font-family:var(--mono);font-size:16px">${m.maschine}</span>
+          <span style="margin-left:auto;display:flex;gap:6px">
+            <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:12px;background:${connBg};color:${connCol}">${connLabel}</span>
+            <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:12px;background:${machBg};color:${machCol}">${machLabel}</span>
+          </span>
         </div>
-        <div style="font-size:12px;color:var(--text2)">Letztes Signal: <strong>${m.lastSignal?fmtDT(m.lastSignal):'–'}</strong></div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">Vor <strong>${minStr}</strong></div>
+        <div style="font-size:13px;color:var(--text2)">Letzte Bewegung:</div>
+        <div style="font-size:15px;font-weight:600;font-family:var(--mono);color:var(--text);margin-top:2px">${letzteAkt?fmtDT(letzteAkt):'–'}</div>
+        ${bewegungStr?`<div style="font-size:12px;color:var(--text3);margin-top:2px">vor ${bewegungStr}</div>`:''}
         ${isAlert?`<div style="margin-top:10px;padding:7px 11px;background:var(--p1lt);border-radius:6px;font-size:12px;color:var(--p1);font-weight:600">⚠ ${qsNow} Bauteil${qsNow>1?'e warten':'wartet'} in QS!</div>`:''}
       </div>`;
     }).join('');
