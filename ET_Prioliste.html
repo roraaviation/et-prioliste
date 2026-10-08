@@ -273,7 +273,7 @@ tr.row-rueck{background:#fff8f8}
 <div id="auth-overlay"><div class="login-box"><div class="login-title">ET Prioliste</div><div class="login-sub">Bitte mit RO-RA Account anmelden</div><button class="btn btn-primary" onclick="login()" style="padding:11px 32px;font-size:15px;margin-top:4px">Anmelden</button></div></div>
 <div class="header">
 
-  <span class="header-title">ET Prioliste</span>
+  <span class="header-title">ET Prioliste</span><span id="app-ver" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:4px">v2026.10.08-c</span>
   <span class="header-sep"></span>
   <span class="header-user" id="user-name"></span>
   <span id="rolle-badge" style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:var(--p3lt);color:var(--p3);font-family:var(--mono)">Fertigung</span><div class="header-dot" id="conn-dot"></div>
@@ -1501,7 +1501,7 @@ const GRUPPE_INFO={
   'Hermle':{bereich:'Fräsen',label:'Hermle'},'Grob':{bereich:'Fräsen',label:'Grob'},
   'C100':{bereich:'Drehen',label:'C100'},'C200':{bereich:'Drehen',label:'C200'},
   'Powermill':{bereich:'Drehen',label:'Powermill (EMCO)'},'R300':{bereich:'Drehen',label:'R300'},
-  'Standalone':{bereich:'Drehen',label:'Standalone 1009'}
+  'Standalone':{bereich:'Drehen',label:'1009'}
 };
 function gruppeOf(machine){const k=String(machine||'').trim().toUpperCase();if(POOL_GRUPPE[k])return POOL_GRUPPE[k];if(k==='R300')return'R300';return'Sonstige';}
 function gruppeLabel(g){return GRUPPE_INFO[g]?.label||g;}
