@@ -224,7 +224,7 @@ tr.row-rueck{background:#fff8f8}
 .undo-toast button:hover{background:rgba(255,255,255,.15)}
 .undo-bar{position:absolute;left:0;bottom:0;height:3px;background:var(--p3);border-radius:0 0 10px 10px}
 /* ── Auswertung ── */
-#screen-auswertung{--mono:var(--font);font-variant-numeric:tabular-nums}
+#screen-auswertung,#aw-lupe{--mono:var(--font);font-variant-numeric:tabular-nums}
 #screen-auswertung .aw-lbl,#screen-auswertung th{letter-spacing:.4px}
 .aw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
 .aw-tile{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
@@ -504,6 +504,7 @@ tr.row-rueck{background:#fff8f8}
 </div>
 <div class="undo-toast" id="undo-toast"><span id="undo-msg"></span><button onclick="doUndo()">Rückgängig</button><div class="undo-bar" id="undo-bar"></div></div>
 <div class="aw-tip" id="aw-tip"></div>
+<div id="aw-lupe" class="drawer"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1489,27 +1490,60 @@ function openScannerModal(){
 
 // ── DEMO-MODUS (?demo=1): erfundene Daten nur für die Auswertung, nichts wird gespeichert ──
 const DEMO=new URLSearchParams(window.location.search).get('demo')==='1';
-// Artikel, Bezeichnung, Maschine, Bereich, Häufigkeit (Vorgänge/Woche), FTR-Grundwahrscheinlichkeit
+// Fertigungsgruppen: Pool (Maschinennummer) -> Gruppe. Quelle: Dynamics-Export 10/2026
+const POOL_GRUPPE={"1004": "Hermle", "1009": "Standalone", "1012": "C100", "1015": "Hermle", "1016": "C100", "1019": "Hermle", "1023": "C200", "1025": "Hermle", "1026": "Hermle", "1027": "C100", "1028": "C100", "1030": "R300", "1032": "Grob", "1033": "Grob", "1034": "Grob", "1037": "Powermill", "1042": "Grob", "1044": "C100", "1045": "C200", "1064": "Grob", "1065": "C200", "1066": "Hermle", "1067": "Powermill"};
+const GRUPPE_INFO={
+  'Hermle':{bereich:'Fräsen',label:'Hermle'},'Grob':{bereich:'Fräsen',label:'Grob'},
+  'C100':{bereich:'Drehen',label:'C100'},'C200':{bereich:'Drehen',label:'C200'},
+  'Powermill':{bereich:'Drehen',label:'Powermill (EMCO)'},'R300':{bereich:'Drehen',label:'R300'},
+  'Standalone':{bereich:'Drehen',label:'Standalone 1009'}
+};
+function gruppeOf(machine){const k=String(machine||'').trim().toUpperCase();if(POOL_GRUPPE[k])return POOL_GRUPPE[k];if(k==='R300')return'R300';return'Sonstige';}
+function gruppeLabel(g){return GRUPPE_INFO[g]?.label||g;}
+// Demo: echte Artikel aus dem Dynamics-Export [Artikel, Bezeichnung, Pool, Gruppe]
 const DEMO_ARTIKEL=[
-  ['108080','FORK END','1067','Drehen',0.9,0.50],
-  ['108140','ROD END','1067','Drehen',0.8,0.60],
-  ['108280','GEHÄUSE','R300','Drehen',0.35,0.35],
-  ['110050','FITTING','R300','Drehen',0.5,0.30],
-  ['109310','FORK END','1023','Drehen',0.6,0.55],
-  ['109420','ROD END','1009','Drehen',0.6,0.62],
-  ['108900','ROD END','C200','Drehen',0.7,0.68],
-  ['104500','BOLZEN','C100','Drehen',0.5,0.85],
-  ['107014','RIB POST 6','1066','Fräsen',0.7,0.80],
-  ['107220','BRACKET','1037','Fräsen',0.6,0.88],
-  ['107560','GEHÄUSE','1066','Fräsen',0.4,0.75],
-  ['106880','HEBEL','1040','Fräsen',0.5,0.90],
+  ["107615B", "Y-BRACKET BENDED LH1", "1026", "Hermle"],
+  ["107614B", "Y-BRACKET", "1026", "Hermle"],
+  ["103150B", "CLACK VALVE SPACER", "1025", "Hermle"],
+  ["104950B", "WASHER, TAB SKEW SENSOR", "1019", "Hermle"],
+  ["200038", "Verteilerblock", "1004", "Hermle"],
+  ["107616B", "Y-BRACKET", "1015", "Hermle"],
+  ["103011B", "CNCTR RIB 4 REFL)", "1042", "Grob"],
+  ["103165B", "CNCTR F SPAR FEED", "1032", "Grob"],
+  ["103152B", "CNCTR RIB 3 SCAV", "1033", "Grob"],
+  ["103082B", "CNCTR RIB 8 IGDS", "1033", "Grob"],
+  ["107511B", "Bracket", "1042", "Grob"],
+  ["104571B", "Threaded Sleeve LH", "1012", "C100"],
+  ["102933B", "Pin, NGV", "1028", "C100"],
+  ["104468B", "Pin Hollow Headed", "1044", "C100"],
+  ["101256B", "Threaded Sleeve RH", "1016", "C100"],
+  ["100804B", "Pin, Centralising", "1027", "C100"],
+  ["101446B", "Rod End", "1065", "C200"],
+  ["102271B", "Rod End", "1065", "C200"],
+  ["108354", "OUTER BALL", "1023", "C200"],
+  ["108353B", "INNER BALL", "1023", "C200"],
+  ["108141B", "Rod End Female", "1037", "Powermill"],
+  ["108042B", "ROD END", "1037", "Powermill"],
+  ["101280B", "Fork End", "1067", "Powermill"],
+  ["102531B", "Fork End", "1067", "Powermill"],
+  ["108285", "JOURNAL", "1030", "R300"],
+  ["107947", "HOUSING, OUTER HALF BRG", "1030", "R300"],
+  ["108375", "CLUTCH", "1030", "R300"],
+  ["100263F", "AEROSHOCK Typ X", "1009", "Standalone"],
+  ["100264F", "AEROSHOCK Typ Y", "1009", "Standalone"]
 ];
+// Demo-Profil je Gruppe: [Vorgänge pro Woche je Artikel, FTR-Grundwahrscheinlichkeit]
+const DEMO_PROFIL={Hermle:[0.55,0.86],Grob:[0.55,0.82],C100:[0.6,0.88],C200:[0.55,0.62],Powermill:[0.65,0.45],R300:[0.45,0.35],Standalone:[0.4,0.55]};
 const DEMO_GRUENDE=['Pos12 Position','Pos4 Ø zu groß','Pos7 Rundlauf','Pos23 Länge','Pos9 Gewinde','Pos15 Rauheit Ra','Pos3 Koaxialität','Pos18 Winkel'];
+// Problemteil für die Demo: fällt immer wieder an Pos7/Pos3 durch (z. B. Spannung/Übergabe)
+const DEMO_PROBLEM={nr:'108141',bez:'Rod End Female',maschinen:['1037','1067'],gruende:['Pos7 Rundlauf','Pos7 Rundlauf','Pos7 Rundlauf','Pos3 Koaxialität','Pos3 Koaxialität','Pos12 Position']};
 function genDemoParts(){
   let seed=20261008;const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
   const out=[];let id=1;const WEEKS=16;const now=Date.now();
   for(let w=WEEKS;w>=0;w--){
-    DEMO_ARTIKEL.forEach(([nr,bez,mach,ber,freq,pOk])=>{
+    DEMO_ARTIKEL.forEach(([nr0,bez,mach,grp],ai)=>{
+      const nr=nr0.replace(/B$/,'');const ber=GRUPPE_INFO[grp].bereich;
+      const [freq,p0]=DEMO_PROFIL[grp];const pOk=Math.max(0.15,Math.min(0.97,p0+((ai*37)%11-5)/50));
       let n=Math.floor(freq+rnd());
       for(let k=0;k<n;k++){
         const start=now-(w*7+rnd()*6)*86400000-rnd()*8*3600000;
@@ -1523,13 +1557,30 @@ function genDemoParts(){
           const done=t<now;
           out.push({id:id++,nr:nr+(rnd()<0.4?'B':''),bez,machine:mach,bereich:ber,prio:rnd()<0.15?'1':'2',
             status:!done?'Bauteil in QS':ok?'Freigegeben':'Rückgewiesen',notiz:v>1?'⚠ Rückweisung':'',
-            rueck:ok||!done?'':DEMO_GRUENDE[Math.floor(rnd()*DEMO_GRUENDE.length)],reihenfolge:10,geplant:null,
+            rueck:ok||!done?'':(nr===DEMO_PROBLEM.nr?DEMO_PROBLEM.gruende[Math.floor(rnd()*DEMO_PROBLEM.gruende.length)]:DEMO_GRUENDE[Math.floor(rnd()*DEMO_GRUENDE.length)]),reihenfolge:10,geplant:null,
             ts_angek:new Date(start).toISOString(),ts_qs:new Date(t-3600000).toISOString(),ts_haend:null,ts_abg:done?new Date(t).toISOString():null,
             versuchStored:v,vorgangStored:vg,angelegtVon:'Demo',geaendertVon:'',letzteAenderung:''});
           if(ok||!done||lastWeekOpen)break;
         }
       }
     });
+  }
+  // 20 zusätzliche Einträge auf den EMCOs (Powermill), Schwerpunkt Problemteil
+  const P=DEMO_PROBLEM;let extra=0;
+  while(extra<20){
+    const start=now-(2+rnd()*68)*86400000;const vg=id;let t=start;
+    const mach=P.maschinen[Math.floor(rnd()*P.maschinen.length)];
+    for(let v=1;v<=4&&extra<20;v++){
+      t+=(2+rnd()*4)*3600000;
+      const ok=rnd()<0.25||v===4;
+      out.push({id:id++,nr:P.nr+(rnd()<0.5?'B':''),bez:P.bez,machine:mach,bereich:'Drehen',prio:'2',
+        status:ok?'Freigegeben':'Rückgewiesen',notiz:v>1?'⚠ Rückweisung':'',
+        rueck:ok?'':P.gruende[Math.floor(rnd()*P.gruende.length)],reihenfolge:10,geplant:null,
+        ts_angek:new Date(start).toISOString(),ts_qs:new Date(t-3600000).toISOString(),ts_haend:null,ts_abg:new Date(t).toISOString(),
+        versuchStored:v,vorgangStored:vg,angelegtVon:'Demo',geaendertVon:'',letzteAenderung:''});
+      extra++;
+      if(ok)break;
+    }
   }
   return out;
 }
@@ -1564,7 +1615,7 @@ function buildVorgaenge(list){
     const first=c[0],last=c[c.length-1];
     const frei=last.status==='Freigegeben';
     const rueckItems=c.filter(x=>x.status==='Rückgewiesen');
-    return{key:first.id,nr:normNr(first.nr),nrRaw:last.nr,bez:last.bez||first.bez,machine:String(last.machine||first.machine||'–'),
+    return{key:first.id,nr:normNr(first.nr),nrRaw:last.nr,bez:last.bez||first.bez,machine:String(last.machine||first.machine||'–'),gruppe:gruppeOf(last.machine||first.machine),
       bereich:first.bereich||last.bereich,pk:first.prio==='PK',versuche:c.length,rueck:rueckItems.length,
       gruende:rueckItems.map(x=>x.rueck).filter(Boolean),frei,ftr:frei&&rueckItems.length===0,
       start:first.ts_angek||first.ts_qs,ende:frei?last.ts_abg:null,
@@ -1608,13 +1659,15 @@ function renderAuswertung(){
   const trend=keys.length?`<div class="trend">${keys.map(k=>{const a=agg(buckets[k]);return`<div class="trend-col" data-tip="<b>${bucketLbl(k)}</b><br>FTR ${a.quote} %<br>${a.ftr} von ${a.ab} beim 1. Versuch i.O.<br>${a.rueck} Rückweisung(en)"><span class="trend-v">${a.quote} %</span><div class="trend-bar" style="height:${Math.max(a.quote,2)}%"></div></div>`;}).join('')}</div>
     <div class="trend-x">${keys.map(k=>`<span>${bucketLbl(k)}</span>`).join('')}</div>`:'<div class="aw-note">Noch keine abgeschlossenen Vorgänge im Zeitraum.</div>';
 
-  // Maschinen
-  const mm={};vs.forEach(v=>{(mm[v.machine]=mm[v.machine]||{m:v.machine,b:v.bereich,list:[]}).list.push(v);});
-  let mRows=Object.values(mm).map(x=>({...x,...agg(x.list)}));
-  mRows=sortRows(mRows,awSort.m);
+  // Fertigungsgruppen -> Maschinen
+  const gm={};vs.forEach(v=>{const G=(gm[v.gruppe]=gm[v.gruppe]||{m:gruppeLabel(v.gruppe),g:v.gruppe,b:GRUPPE_INFO[v.gruppe]?.bereich||v.bereich,list:[],pools:{}});G.list.push(v);(G.pools[v.machine]=G.pools[v.machine]||{m:v.machine,list:[]}).list.push(v);});
+  let gRows=sortRows(Object.values(gm).map(x=>({...x,...agg(x.list),poolRows:sortRows(Object.values(x.pools).map(p=>({...p,...agg(p.list)})),awSort.m)})),awSort.m);
+  gRows.sort((a,b)=>(a.g==='Sonstige')-(b.g==='Sonstige'));
+  const selIs=k=>awMaschine===k;
+  const selLabel=!awMaschine?'':awMaschine.startsWith('G:')?gruppeLabel(awMaschine.slice(2)):'Maschine '+awMaschine;
   // Teile
-  const tv=vs.filter(v=>!awMaschine||v.machine===awMaschine);
-  const tm={};tv.forEach(v=>{const t=(tm[v.nr]=tm[v.nr]||{nr:v.nr,bez:v.bez,mach:new Set(),list:[],gruende:[]});t.list.push(v);t.mach.add(v.machine);t.gruende.push(...v.gruende);});
+  const tv=vs.filter(v=>!awMaschine||(awMaschine.startsWith('G:')?v.gruppe===awMaschine.slice(2):v.machine===awMaschine));
+  const tm={};tv.forEach(v=>{const t=(tm[v.nr]=tm[v.nr]||{nr:v.nr,bez:v.bez,mach:new Set(),grp:new Set(),list:[],gruende:[]});t.list.push(v);t.mach.add(v.machine);t.grp.add(gruppeLabel(v.gruppe));t.gruende.push(...v.gruende);});
   let tRows=Object.values(tm).map(x=>({...x,...agg(x.list)})).filter(t=>!awTeilSuche||t.nr.includes(awTeilSuche)||(t.bez||'').toUpperCase().includes(awTeilSuche));
   tRows=sortRows(tRows,awSort.t);
   const th=(tbl,key,lbl,num)=>{const[sk,sd]=awSort[tbl];return`<th class="${num?'num':''}" onclick="awSetSort('${tbl}','${key}')">${lbl}${sk===key?(sd>0?' ▲':' ▼'):''}</th>`;};
@@ -1632,29 +1685,47 @@ function renderAuswertung(){
       <div class="aw-card-h"><span class="aw-card-t">FTR-Verlauf ${awBereich==='alle'?'':'· '+awBereich}</span><span class="aw-card-s">pro ${byMonth?'Monat':'Kalenderwoche'} · Anteil der Vorgänge, die beim 1. Versuch freigegeben wurden</span></div>
       ${trend}
     </div>
+    ${(()=>{const top=[...tRows].filter(r=>r.rueck>0).sort((a,b)=>b.rueck-a.rueck||(a.quote??999)-(b.quote??999)).slice(0,3);
+      if(!top.length)return'';
+      return `<div class="aw-card"><div class="aw-card-h"><span class="aw-card-t">🔍 Problemteile</span><span class="aw-card-s">meiste Rückweisungen${awMaschine?' · '+selLabel:''} · Klick öffnet die Detailanalyse</span></div>
+        <div class="aw-grid" style="padding:14px 18px;margin:0">${top.map((r,i)=>{const pc=posCounts(r.gruende);const tp=pc[0];
+          return `<div class="aw-tile prob-tile" onclick="awOpenTeil('${r.nr}')" style="cursor:pointer;${i===0?'border:2px solid var(--p1)':''}">
+            <div class="aw-lbl">#${i+1} · ${[...r.grp].join(', ')}</div>
+            <div style="font-size:20px;font-weight:700;margin-top:6px">${r.nr} <span style="font-size:13px;font-weight:400;color:var(--text2)">${r.bez||''}</span></div>
+            <div style="display:flex;gap:18px;margin-top:10px;font-size:13px;color:var(--text2)">
+              <span><b style="color:var(--p1);font-size:18px">${r.rueck}</b> Rückw.</span>
+              <span><b style="font-size:18px;color:var(--text)">${r.quote===null?'–':r.quote+' %'}</b> FTR</span>
+              <span><b style="font-size:18px;color:var(--text)">${r.avgV===null?'–':r.avgV.toFixed(1).replace('.',',')}</b> Ø Vers.</span></div>
+            ${tp?`<div class="aw-sub" style="margin-top:10px">Häufigster Grund: <b style="color:var(--text)">${tp.pos}</b> ${tp.text?'('+tp.text+')':''} – ${tp.n}×</div>`:''}
+            <div style="margin-top:10px;font-size:12px;color:var(--accent);font-weight:600">Unter die Lupe nehmen →</div>
+          </div>`;}).join('')}</div></div>`;})()}
     <div class="aw-cols">
       <div class="aw-card">
-        <div class="aw-card-h"><span class="aw-card-t">Maschinen</span><span class="aw-card-s">Klick auf eine Maschine filtert die Teile</span>
-          ${awMaschine?`<button class="btn btn-sm" style="margin-left:auto" onclick="awSetMaschine(null)">Filter ${awMaschine} ✕</button>`:''}</div>
-        <div class="aw-scroll"><table class="aw-table"><thead><tr>${th('m','m','Maschine')}${th('m','b','Bereich')}${th('m','ab','Vorgänge',1)}${th('m','ftr','FTR',1)}${th('m','avgV','Ø Vers.',1)}${th('m','rueck','Rückw.',1)}</tr></thead>
-        <tbody>${mRows.map(r=>`<tr class="${awMaschine===r.m?'sel':''}" style="cursor:pointer" onclick="awSetMaschine('${String(r.m).replace(/'/g,'')}')">
-          <td class="mono" style="font-weight:600">${r.m}</td><td><span class="bereich-badge ${bCss(r.b)}">${r.b||'–'}</span></td>
-          <td class="num mono">${r.ab}${r.offen?` <span class="chip-sm">+${r.offen} offen</span>`:''}</td><td class="num">${meter(r.quote,r.ab)}</td>
-          <td class="num mono">${r.avgV===null?'–':r.avgV.toFixed(1).replace('.',',')}</td><td class="num mono" style="color:${r.rueck?'var(--p1)':'var(--text3)'};font-weight:600">${r.rueck}</td></tr>`).join('')||'<tr><td colspan="6" class="aw-note">Keine Daten</td></tr>'}</tbody></table></div>
+        <div class="aw-card-h"><span class="aw-card-t">Fertigungsgruppen &amp; Maschinen</span><span class="aw-card-s">Klick filtert die Teile</span>
+          ${awMaschine?`<button class="btn btn-sm" style="margin-left:auto" onclick="awSetMaschine(null)">Filter: ${selLabel} ✕</button>`:''}</div>
+        <div class="aw-scroll"><table class="aw-table"><thead><tr>${th('m','m','Gruppe / Maschine')}${th('m','ab','Vorgänge',1)}${th('m','ftr','FTR',1)}${th('m','avgV','Ø Vers.',1)}${th('m','rueck','Rückw.',1)}</tr></thead>
+        <tbody>${gRows.map(G=>{
+          const row=(r,key,isG)=>`<tr class="${selIs(key)?'sel':''}" style="cursor:pointer;${isG?'background:var(--bg2)':''}" onclick="awSetMaschine('${key.replace(/'/g,'')}')">
+            <td>${isG?`<span style="font-weight:700">${r.m}</span> <span class="bereich-badge ${bCss(G.b)}" style="margin-left:6px;font-size:11px">${G.b||'–'}</span>`:`<span class="mono" style="padding-left:18px;color:var(--text2)">└ ${r.m}</span>`}</td>
+            <td class="num mono" style="${isG?'font-weight:700':''}">${r.ab}${r.offen?` <span class="chip-sm">+${r.offen} offen</span>`:''}</td><td class="num">${meter(r.quote,r.ab)}</td>
+            <td class="num mono">${r.avgV===null?'–':r.avgV.toFixed(1).replace('.',',')}</td><td class="num mono" style="color:${r.rueck?'var(--p1)':'var(--text3)'};font-weight:${isG?700:600}">${r.rueck}</td></tr>`;
+          return row(G,'G:'+G.g,true)+(G.poolRows.length>1||G.g==='Sonstige'?G.poolRows.map(P=>row(P,String(P.m),false)).join(''):'');
+        }).join('')||'<tr><td colspan="5" class="aw-note">Keine Daten</td></tr>'}</tbody></table></div>
       </div>
       <div class="aw-card">
-        <div class="aw-card-h"><span class="aw-card-t">Teile${awMaschine?' · Maschine '+awMaschine:''}</span>
+        <div class="aw-card-h"><span class="aw-card-t">Teile${awMaschine?' · '+selLabel:''}</span>
           <input placeholder="Artikel suchen…" value="${awTeilSuche}" oninput="awSucheTeil(this.value)" style="margin-left:auto;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:var(--font);width:160px;outline:none" id="aw-teil-suche"></div>
         <div class="aw-scroll"><table class="aw-table"><thead><tr>${th('t','nr','Artikel')}${th('t','ab','Vorg.',1)}${th('t','ftr','FTR',1)}${th('t','avgV','Ø Vers.',1)}${th('t','rueck','Rückw.',1)}<th>Letzte Gründe</th></tr></thead>
-        <tbody>${tRows.map(r=>`<tr>
-          <td><div class="mono" style="font-weight:600">${r.nr}</div><div style="font-size:11px;color:var(--text3)">${r.bez||''} · ${[...r.mach].join(', ')}</div></td>
+        <tbody>${tRows.map(r=>`<tr style="cursor:pointer" onclick="awOpenTeil('${r.nr}')" title="Detailanalyse öffnen">
+          <td><div class="mono" style="font-weight:600">${r.nr}</div><div style="font-size:11px;color:var(--text3)">${r.bez||''} · ${[...r.mach].join(', ')} (${[...r.grp].join(', ')})</div></td>
           <td class="num mono">${r.ab}${r.offen?` <span class="chip-sm">+${r.offen}</span>`:''}</td><td class="num">${meter(r.quote,r.ab)}</td>
           <td class="num mono">${r.avgV===null?'–':r.avgV.toFixed(1).replace('.',',')}</td>
           <td class="num mono" style="color:${r.rueck?'var(--p1)':'var(--text3)'};font-weight:600">${r.rueck}</td>
           <td style="font-size:12px;color:var(--text2);max-width:220px">${r.gruende.slice(-2).join(' · ')||'–'}</td></tr>`).join('')||'<tr><td colspan="6" class="aw-note">Keine Daten</td></tr>'}</tbody></table></div>
       </div>
     </div>
-    <div class="aw-note">FTR = Anteil der freigegebenen Vorgänge ohne Rückweisung. Ein Vorgang = alle Versuche eines Erstteils bis zur Freigabe. Prozesskontrollen (PK) sind ausgeschlossen. Artikel mit/ohne B werden zusammengefasst. Bei wenigen Vorgängen (n &lt; 3) ist die Quote nur eingeschränkt aussagekräftig.</div>`;
+    <div class="aw-note">FTR = Anteil der freigegebenen Vorgänge ohne Rückweisung. Ein Vorgang = alle Versuche eines Erstteils bis zur Freigabe. Prozesskontrollen (PK) sind ausgeschlossen. Artikel mit/ohne B werden zusammengefasst. Maschinen werden über die Pool-Nummer einer Fertigungsgruppe zugeordnet. Bei wenigen Vorgängen (n &lt; 3) ist die Quote nur eingeschränkt aussagekräftig.</div>`;
+  if(awLupe)renderLupe();
   // Tooltips für den Verlauf
   document.querySelectorAll('#aw-content .trend-col').forEach(el=>{
     el.onmousemove=e=>{const t=document.getElementById('aw-tip');t.innerHTML=el.dataset.tip;t.style.display='block';t.style.left=Math.min(e.clientX+14,window.innerWidth-200)+'px';t.style.top=(e.clientY-10)+'px';};
@@ -1685,6 +1756,58 @@ function exportVorgaengeCSV(){
   const blob=new Blob(['﻿'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ET_FTR_Vorgaenge_${new Date().toISOString().slice(0,10)}.csv`;a.click();
 }
+
+// ── Teil-Lupe: Detailanalyse eines Artikels ──
+let awLupe=null;
+function posCounts(gruende){
+  const m={};
+  gruende.forEach(g=>{
+    const hits=[...String(g).matchAll(/pos\.?\s*(\d+)\s*([^,;·]*)/gi)];
+    if(!hits.length){const k='ohne Pos.';(m[k]=m[k]||{pos:k,text:'',n:0}).n++;return;}
+    hits.forEach(h=>{const k='Pos'+h[1];const e=(m[k]=m[k]||{pos:k,text:'',n:0});e.n++;const t=h[2].replace(/^[\s–\-:]+/,'').trim();if(t&&!e.text)e.text=t;});
+  });
+  return Object.values(m).sort((a,b)=>b.n-a.n);
+}
+function awOpenTeil(nr){awLupe=nr;renderLupe();}
+function awCloseLupe(){awLupe=null;const d=document.getElementById('aw-lupe');d.classList.remove('open');d.innerHTML='';}
+function renderLupe(){
+  const d=document.getElementById('aw-lupe');
+  const vs=awFiltered().filter(v=>v.nr===awLupe).sort((a,b)=>b.datum-a.datum);
+  if(!vs.length){awCloseLupe();return;}
+  const a=agg(vs);const f=vs[0];
+  const gr=vs.flatMap(v=>v.gruende);const pc=posCounts(gr);const maxN=pc[0]?.n||1;
+  const machs={};vs.forEach(v=>{(machs[v.machine]=machs[v.machine]||[]).push(v);});
+  const zeit=awZeit?`letzte ${awZeit===365?'12 Monate':awZeit+' Tage'}`:'gesamter Zeitraum';
+  d.innerHTML=`<div class="detail-panel">
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px">
+      <div style="flex:1"><div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600">Detailanalyse · ${zeit}</div>
+        <div style="font-size:22px;font-weight:700;margin-top:4px">${awLupe} <span style="font-size:14px;font-weight:400;color:var(--text2)">${f.bez||''}</span></div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${Object.keys(machs).map(m=>m+' ('+gruppeLabel(gruppeOf(m))+')').join(', ')}</div></div>
+      <button onclick="awCloseLupe()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
+      ${[['FTR',a.quote===null?'–':a.quote+' %'],['Vorgänge',a.ab+(a.offen?' +'+a.offen:'')],['Ø Versuche',a.avgV===null?'–':a.avgV.toFixed(1).replace('.',',')],['Rückweisungen',a.rueck]].map(([l,v],i)=>`<div style="background:var(--bg2);border-radius:8px;padding:10px;text-align:center"><div class="aw-lbl" style="font-size:10px">${l}</div><div style="font-size:20px;font-weight:700;margin-top:4px;color:${i===3&&a.rueck?'var(--p1)':'var(--text)'}">${v}</div></div>`).join('')}
+    </div>
+    <div class="aw-lbl" style="margin-bottom:8px">Woran es scheitert – Rückweisungen nach Position</div>
+    ${pc.length?`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px">${pc.map(p=>`<div style="display:grid;grid-template-columns:150px 1fr 28px;align-items:center;gap:10px;font-size:13px">
+        <span><b>${p.pos}</b> <span style="color:var(--text3)">${p.text}</span></span>
+        <div class="meter-track" style="width:100%;height:10px"><div class="meter-fill" style="width:${p.n/maxN*100}%;background:var(--p1)"></div></div>
+        <span style="font-weight:700;text-align:right">${p.n}</span></div>`).join('')}</div>
+      ${pc[0]&&pc[0].n>=Math.max(2,gr.length*0.4)?`<div style="background:var(--p1lt);border:1px solid #f0b0b0;color:var(--p1);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:18px"><b>${pc[0].pos}</b> verursacht ${Math.round(pc[0].n/gr.length*100)} % aller Rückweisungen bei diesem Teil. Das deutet auf eine <b>systematische Ursache</b> hin und ist der erste Ansatzpunkt.</div>`:''}`
+      :'<div class="aw-sub" style="margin-bottom:18px">Keine Rückweisungen im Zeitraum.</div>'}
+    ${Object.keys(machs).length>1?`<div class="aw-lbl" style="margin-bottom:8px">Nach Maschine</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:18px">${Object.entries(machs).map(([m,l])=>{const x=agg(l);return`<div style="display:grid;grid-template-columns:90px 1fr;align-items:center;gap:10px;font-size:13px"><span class="mono" style="font-weight:600">${m}</span>${meter(x.quote,x.ab).replace('justify-content:flex-end','')}</div>`;}).join('')}</div>`:''}
+    <div class="aw-lbl" style="margin-bottom:8px">Alle Vorgänge</div>
+    <div style="display:flex;flex-direction:column">${vs.map(v=>{
+      const dots=Array.from({length:v.rueck},()=>'<span style="color:var(--p1);font-weight:700">✗</span>').join(' ')+(v.frei?' <span style="color:var(--p3);font-weight:700">✓</span>':' <span class="chip-sm">offen</span>');
+      return `<div style="display:grid;grid-template-columns:92px 52px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--border);font-size:13px;align-items:start">
+        <span style="color:var(--text2)">${fmtDT(v.ende||v.start)}</span><span class="mono">${v.machine}</span>
+        <div><div>${dots} <span style="color:var(--text3);font-size:12px">${v.versuche} ${v.versuche===1?'Versuch':'Versuche'}</span></div>
+        ${v.gruende.length?`<div style="font-size:12px;color:var(--text2);margin-top:2px">${v.gruende.join(' · ')}</div>`:''}</div></div>`;}).join('')}</div>
+  </div>`;
+  d.classList.add('open');
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&awLupe)awCloseLupe();});
 // ── END AUSWERTUNG ────────────────────────────────────────────────────────
 
 // ── CMM MONITORING ────────────────────────────────────────────────────────
