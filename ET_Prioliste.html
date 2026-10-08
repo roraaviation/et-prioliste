@@ -261,6 +261,11 @@ tr.row-rueck{background:#fff8f8}
 .aw-tip{position:fixed;pointer-events:none;background:#1a1e2e;color:#fff;font-size:12px;padding:7px 10px;border-radius:6px;z-index:1200;display:none;box-shadow:0 4px 14px rgba(0,0,0,.2);line-height:1.5}
 .aw-note{font-size:12px;color:var(--text3);padding:10px 18px}
 .chip-sm{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--bg3);color:var(--text2);font-family:var(--mono)}
+.lupe-sec{border-top:1px solid var(--border);padding:10px 0}
+.lupe-sec summary{list-style:none;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.lupe-sec summary::-webkit-details-marker{display:none}
+.lupe-chev{display:inline-block;color:var(--text3);transition:transform .15s;width:12px}
+.lupe-sec[open] .lupe-chev{transform:rotate(90deg)}
 </style>
 </head>
 <body>
@@ -1687,15 +1692,16 @@ function renderAuswertung(){
     </div>
     <div class="aw-cols">
       <div class="aw-card">
-        <div class="aw-card-h"><span class="aw-card-t">Fertigungsgruppen &amp; Maschinen</span><span class="aw-card-s">Klick filtert die Teile</span>
+        <div class="aw-card-h"><span class="aw-card-t">Fertigungsgruppen &amp; Maschinen</span><span class="aw-card-s">Klick auf Gruppe klappt Maschinen auf und filtert die Teile</span>
           ${awMaschine?`<button class="btn btn-sm" style="margin-left:auto" onclick="awSetMaschine(null)">Filter: ${selLabel} ✕</button>`:''}</div>
         <div class="aw-scroll"><table class="aw-table"><thead><tr>${th('m','m','Gruppe / Maschine')}${th('m','ab','Vorgänge',1)}${th('m','ftr','FTR',1)}${th('m','avgV','Ø Vers.',1)}${th('m','rueck','Rückw.',1)}</tr></thead>
         <tbody>${gRows.map(G=>{
-          const row=(r,key,isG)=>`<tr class="${selIs(key)?'sel':''}" style="cursor:pointer;${isG?'background:var(--bg2)':''}" onclick="awSetMaschine('${key.replace(/'/g,'')}')">
-            <td>${isG?`<span style="font-weight:700">${r.m}</span> <span class="bereich-badge ${bCss(G.b)}" style="margin-left:6px;font-size:11px">${G.b||'–'}</span>`:`<span class="mono" style="padding-left:18px;color:var(--text2)">└ ${r.m}</span>`}</td>
+          const multi=G.poolRows.length>1||G.g==='Sonstige';const open=awOffen.has(G.g);
+          const row=(r,key,isG)=>`<tr class="${selIs(key)?'sel':''}" style="cursor:pointer;${isG?'background:var(--bg2)':''}" onclick="${isG?`awToggleGruppe('${G.g}')`:`awSetMaschine('${key.replace(/'/g,'')}')`}">
+            <td>${isG?`<span style="display:inline-block;width:14px;color:var(--text3)">${multi?(open?'▾':'▸'):''}</span><span style="font-weight:700">${r.m}</span> <span class="bereich-badge ${bCss(G.b)}" style="margin-left:6px;font-size:11px">${G.b||'–'}</span>`:`<span class="mono" style="padding-left:32px;color:var(--text2)">└ ${r.m}</span>`}</td>
             <td class="num mono" style="${isG?'font-weight:700':''}">${r.ab}${r.offen?` <span class="chip-sm">+${r.offen} offen</span>`:''}</td><td class="num">${meter(r.quote,r.ab)}</td>
             <td class="num mono">${r.avgV===null?'–':r.avgV.toFixed(1).replace('.',',')}</td><td class="num mono" style="color:${r.rueck?'var(--p1)':'var(--text3)'};font-weight:${isG?700:600}">${r.rueck}</td></tr>`;
-          return row(G,'G:'+G.g,true)+(G.poolRows.length>1||G.g==='Sonstige'?G.poolRows.map(P=>row(P,String(P.m),false)).join(''):'');
+          return row(G,'G:'+G.g,true)+(multi&&open?G.poolRows.map(P=>row(P,String(P.m),false)).join(''):'');
         }).join('')||'<tr><td colspan="5" class="aw-note">Keine Daten</td></tr>'}</tbody></table></div>
       </div>
       <div class="aw-card">
@@ -1725,6 +1731,14 @@ function sortRows(rows,[k,d]){
   return rows.sort((a,b)=>{const va=val(a),vb=val(b);if(typeof va==='string')return d*va.localeCompare(vb,'de',{numeric:true});return d*(va-vb)||(b.ab-a.ab);});
 }
 function awSetSort(tbl,key){const[k,d]=awSort[tbl];awSort[tbl]=[key,k===key?-d:(key==='ftr'||key==='m'||key==='nr'||key==='b'?1:-1)];renderAuswertung();}
+let awOffen=new Set();
+// Gruppe auf-/zuklappen und Teile auf die Gruppe filtern
+function awToggleGruppe(g){
+  const key='G:'+g;
+  if(awOffen.has(g)){awOffen.delete(g);if(awMaschine===key||(awMaschine&&!awMaschine.startsWith('G:')&&gruppeOf(awMaschine)===g))awMaschine=null;}
+  else{awOffen.add(g);awMaschine=key;}
+  renderAuswertung();
+}
 function awSetMaschine(m){awMaschine=awMaschine===m?null:m;renderAuswertung();}
 function awSetBereich(b){awBereich=b;document.querySelectorAll('#aw-bereich .seg-btn').forEach(x=>x.classList.toggle('active',x.dataset.v===b));awMaschine=null;renderAuswertung();}
 document.addEventListener('click',e=>{
@@ -1756,6 +1770,13 @@ function posCounts(gruende){
 }
 function awOpenTeil(nr){awLupe=nr;renderLupe();}
 function awCloseLupe(){awLupe=null;const d=document.getElementById('aw-lupe');d.classList.remove('open');d.innerHTML='';}
+let awLupeOffen=new Set(['pos']); // standardmäßig nur "Woran es scheitert" offen
+function lupeToggle(k,el){if(el.open)awLupeOffen.add(k);else awLupeOffen.delete(k);}
+function sec(k,title,meta,body){
+  return `<details class="lupe-sec" ${awLupeOffen.has(k)?'open':''} ontoggle="lupeToggle('${k}',this)">
+    <summary><span class="lupe-chev">▸</span><span class="aw-lbl" style="flex:1">${title}</span><span class="chip-sm">${meta}</span></summary>
+    <div style="padding-top:10px">${body}</div></details>`;
+}
 function renderLupe(){
   const d=document.getElementById('aw-lupe');
   const vs=awFiltered().filter(v=>v.nr===awLupe).sort((a,b)=>b.datum-a.datum);
@@ -1774,22 +1795,22 @@ function renderLupe(){
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">
       ${[['FTR',a.quote===null?'–':a.quote+' %'],['Vorgänge',a.ab+(a.offen?' +'+a.offen:'')],['Ø Versuche',a.avgV===null?'–':a.avgV.toFixed(1).replace('.',',')],['Rückweisungen',a.rueck]].map(([l,v],i)=>`<div style="background:var(--bg2);border-radius:8px;padding:10px;text-align:center"><div class="aw-lbl" style="font-size:10px">${l}</div><div style="font-size:20px;font-weight:700;margin-top:4px;color:${i===3&&a.rueck?'var(--p1)':'var(--text)'}">${v}</div></div>`).join('')}
     </div>
-    <div class="aw-lbl" style="margin-bottom:8px">Woran es scheitert – Rückweisungen nach Position</div>
+    ${sec('pos','Woran es scheitert – Rückweisungen nach Position',pc.length?pc.length+' Pos.':'–',`
     ${pc.length?`<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:18px">${pc.map(p=>`<div style="display:grid;grid-template-columns:150px 1fr 28px;align-items:center;gap:10px;font-size:13px">
         <span><b>${p.pos}</b> <span style="color:var(--text3)">${p.text}</span></span>
         <div class="meter-track" style="width:100%;height:10px"><div class="meter-fill" style="width:${p.n/maxN*100}%;background:var(--p1)"></div></div>
         <span style="font-weight:700;text-align:right">${p.n}</span></div>`).join('')}</div>
       ${pc[0]&&pc[0].n>=Math.max(2,gr.length*0.4)?`<div style="background:var(--p1lt);border:1px solid #f0b0b0;color:var(--p1);border-radius:8px;padding:10px 12px;font-size:13px;margin-bottom:18px"><b>${pc[0].pos}</b> verursacht ${Math.round(pc[0].n/gr.length*100)} % aller Rückweisungen bei diesem Teil. Das deutet auf eine <b>systematische Ursache</b> hin und ist der erste Ansatzpunkt.</div>`:''}`
-      :'<div class="aw-sub" style="margin-bottom:18px">Keine Rückweisungen im Zeitraum.</div>'}
-    ${Object.keys(machs).length>1?`<div class="aw-lbl" style="margin-bottom:8px">Nach Maschine</div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:18px">${Object.entries(machs).map(([m,l])=>{const x=agg(l);return`<div style="display:grid;grid-template-columns:90px 1fr;align-items:center;gap:10px;font-size:13px"><span class="mono" style="font-weight:600">${m}</span>${meter(x.quote,x.ab).replace('justify-content:flex-end','')}</div>`;}).join('')}</div>`:''}
-    <div class="aw-lbl" style="margin-bottom:8px">Alle Vorgänge</div>
+      :'<div class="aw-sub" style="margin-bottom:18px">Keine Rückweisungen im Zeitraum.</div>'}`)}
+    ${Object.keys(machs).length>1?sec('mach','Nach Maschine',Object.keys(machs).length+' Maschinen',`
+      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:18px">${Object.entries(machs).map(([m,l])=>{const x=agg(l);return`<div style="display:grid;grid-template-columns:90px 1fr;align-items:center;gap:10px;font-size:13px"><span class="mono" style="font-weight:600">${m}</span>${meter(x.quote,x.ab).replace('justify-content:flex-end','')}</div>`;}).join('')}</div>`):''}
+    ${sec('vg','Alle Vorgänge',vs.length+'',`
     <div style="display:flex;flex-direction:column">${vs.map(v=>{
       const dots=Array.from({length:v.rueck},()=>'<span style="color:var(--p1);font-weight:700">✗</span>').join(' ')+(v.frei?' <span style="color:var(--p3);font-weight:700">✓</span>':' <span class="chip-sm">offen</span>');
       return `<div style="display:grid;grid-template-columns:92px 52px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--border);font-size:13px;align-items:start">
         <span style="color:var(--text2)">${fmtDT(v.ende||v.start)}</span><span class="mono">${v.machine}</span>
         <div><div>${dots} <span style="color:var(--text3);font-size:12px">${v.versuche} ${v.versuche===1?'Versuch':'Versuche'}</span></div>
-        ${v.gruende.length?`<div style="font-size:12px;color:var(--text2);margin-top:2px">${v.gruende.join(' · ')}</div>`:''}</div></div>`;}).join('')}</div>
+        ${v.gruende.length?`<div style="font-size:12px;color:var(--text2);margin-top:2px">${v.gruende.join(' · ')}</div>`:''}</div></div>`;}).join('')}</div>`)}
   </div>`;
   d.classList.add('open');
 }
