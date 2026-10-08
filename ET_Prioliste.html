@@ -172,6 +172,93 @@ td.mono{font-family:var(--mono);font-size:13px}
 .scanner-error.show{display:block}
 .scanner-error-text{color:var(--p1);font-size:14px;font-weight:500}
 .scanner-new-btn{margin-top:8px;background:none;border:1px solid var(--p1);color:var(--p1);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-family:var(--font)}
+/* ── Toolbar / Filter ── */
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.search-box{position:relative;display:flex;align-items:center;flex:0 1 300px;min-width:200px}
+.search-box input{width:100%;padding:8px 30px 8px 34px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:14px;font-family:var(--font);color:var(--text);outline:none;background:#fff}
+.search-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(26,110,181,.1)}
+.search-ico{position:absolute;left:10px;pointer-events:none}
+#search-clear{position:absolute;right:8px;background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;display:none}
+#search-hint{position:absolute;left:0;top:100%;margin-top:3px;font-size:11px;color:var(--text3);white-space:nowrap}
+.seg{display:inline-flex;background:var(--bg3);border-radius:8px;padding:3px;gap:2px}
+.seg-btn{border:none;background:none;padding:6px 14px;border-radius:6px;font-size:13px;font-family:var(--font);color:var(--text2);cursor:pointer;font-weight:500}
+.seg-btn.active{background:#fff;color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.schips{display:flex;gap:6px;flex-wrap:wrap}
+.schip{display:inline-flex;align-items:center;gap:7px;padding:5px 6px 5px 13px;border-radius:20px;border:1px solid var(--border);background:#fff;font-size:13px;font-family:var(--font);color:var(--text2);cursor:pointer;transition:all .15s}
+.schip:hover{border-color:var(--accent)}
+.schip-n{font-family:var(--mono);font-size:12px;font-weight:700;min-width:22px;text-align:center;padding:1px 6px;border-radius:12px;background:var(--bg3);color:var(--text2)}
+.schip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.schip.active .schip-n{background:rgba(255,255,255,.25);color:#fff}
+.s-col-qs .schip-n{background:var(--p2lt);color:var(--accent)}
+.s-col-haend .schip-n{background:#f0f4ff;color:#4a60b0}
+.s-col-rueck .schip-n.has{background:var(--p1);color:#fff}
+/* ── Zeilen-Aktionen ── */
+.row-act{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
+.act-btn{width:34px;height:34px;border-radius:8px;border:1.5px solid;cursor:pointer;font-size:16px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transition:all .12s;background:#fff;font-family:var(--font)}
+.act-ok{border-color:var(--p3);color:var(--p3)}.act-ok:hover{background:var(--p3);color:#fff}
+.act-no{border-color:var(--p1);color:var(--p1)}.act-no:hover{background:var(--p1);color:#fff}
+.act-again{border:1.5px solid var(--accent);color:var(--accent);background:#fff;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap}
+.act-again:hover{background:var(--accent);color:#fff}
+.sec-row td{padding:7px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;font-family:var(--mono);pointer-events:none}
+.sec-rueck td{background:var(--p1lt);color:var(--p1);border-top:2px solid #f0b0b0}
+.sec-done td{background:#f0f4f8;color:var(--text3);border-top:2px solid var(--border2)}
+.sec-queue td{background:var(--bg2);color:var(--text3)}
+tr.row-rueck{background:#fff8f8}
+/* ── Detail-Seitenleiste ── */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);background:#fff;border-left:1px solid var(--border);box-shadow:-8px 0 30px rgba(0,0,0,.10);z-index:300;overflow-y:auto;transform:translateX(105%);transition:transform .2s ease}
+.drawer.open{transform:translateX(0)}
+.drawer .detail-panel{border:none;box-shadow:none;margin:0!important;border-radius:0;padding:22px 22px 40px}
+@media(min-width:1300px){body.drawer-open .main{padding-right:508px}
+  body.drawer-open #parts-tbody td:nth-child(4),body.drawer-open thead th:nth-child(4),body.drawer-open #parts-tbody td:nth-child(6),body.drawer-open #parts-tbody td:nth-child(8),
+  body.drawer-open thead th:nth-child(6),body.drawer-open thead th:nth-child(8){display:none}
+  body.drawer-open .notiz-text{max-width:160px}}
+/* ── Rückweisungs-Dialog ── */
+#rueck-modal textarea{width:100%;min-height:80px;border:1.5px solid var(--p1);border-radius:var(--radius);padding:10px 12px;font-size:15px;font-family:var(--font);outline:none;resize:vertical}
+#rueck-modal textarea:focus{box-shadow:0 0 0 3px rgba(214,59,59,.12)}
+.rm-hint{font-size:12px;color:var(--text3);margin-top:6px}
+.rm-err{font-size:12px;color:var(--p1);margin-top:6px;display:none}
+/* ── Undo-Toast ── */
+.undo-toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a1e2e;color:#fff;border-radius:10px;padding:12px 14px 12px 18px;font-size:14px;z-index:1000;display:flex;align-items:center;gap:16px;box-shadow:0 6px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:all .2s}
+.undo-toast.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+.undo-toast button{background:none;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:5px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.undo-toast button:hover{background:rgba(255,255,255,.15)}
+.undo-bar{position:absolute;left:0;bottom:0;height:3px;background:var(--p3);border-radius:0 0 10px 10px}
+/* ── Auswertung ── */
+.aw-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+.aw-tile{background:#fff;border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+.aw-tile.hero{border-width:2px}
+.aw-lbl{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono)}
+.aw-val{font-size:34px;font-weight:700;font-family:var(--mono);color:var(--text);margin-top:6px;line-height:1.1}
+.aw-sub{font-size:12px;color:var(--text3);margin-top:6px}
+.aw-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.aw-card{background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
+.aw-card-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.aw-card-t{font-size:14px;font-weight:600;color:var(--text)}
+.aw-card-s{font-size:12px;color:var(--text3)}
+.aw-cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:1100px){.aw-cols{grid-template-columns:1fr}}
+.aw-table{width:100%;border-collapse:collapse}
+.aw-table th{position:sticky;top:0;cursor:pointer;user-select:none}
+.aw-table th.num,.aw-table td.num{text-align:right}
+.aw-table td{padding:10px 14px;font-size:13px;border-bottom:1px solid var(--border)}
+.aw-table tbody tr:hover{background:var(--accentlt)}
+.aw-table tr.sel{background:#dce9f8}
+.aw-scroll{max-height:520px;overflow:auto}
+.meter{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.meter-track{width:90px;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.meter-fill{height:100%;border-radius:0 4px 4px 0}
+.meter-v{font-family:var(--mono);font-weight:700;min-width:44px;text-align:right}
+.q-good{background:var(--p3)}.q-warn{background:#e08800}.q-bad{background:var(--p1)}.q-na{background:var(--border2)}
+.trend{display:flex;align-items:flex-end;gap:6px;height:170px;padding:22px 18px 0}
+.trend-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0;cursor:default}
+.trend-bar{width:100%;max-width:46px;border-radius:4px 4px 0 0;background:var(--accent);opacity:.85;transition:opacity .1s}
+.trend-col:hover .trend-bar{opacity:1}
+.trend-v{font-size:11px;font-family:var(--mono);color:var(--text2);margin-bottom:4px;white-space:nowrap}
+.trend-x{display:flex;gap:6px;padding:6px 18px 14px;border-top:1px solid var(--border);margin:0}
+.trend-x span{flex:1;text-align:center;font-size:10px;color:var(--text3);font-family:var(--mono);white-space:nowrap;overflow:hidden}
+.aw-tip{position:fixed;pointer-events:none;background:#1a1e2e;color:#fff;font-size:12px;padding:7px 10px;border-radius:6px;z-index:1200;display:none;box-shadow:0 4px 14px rgba(0,0,0,.2);line-height:1.5}
+.aw-note{font-size:12px;color:var(--text3);padding:10px 18px}
+.chip-sm{font-size:11px;padding:2px 8px;border-radius:10px;background:var(--bg3);color:var(--text2);font-family:var(--mono)}
 </style>
 </head>
 <body>
@@ -192,52 +279,47 @@ td.mono{font-family:var(--mono);font-size:13px}
     <button class="tab active" onclick="showTab('offen')" id="tab-offen">Offen <span class="tab-badge" id="badge-offen">–</span></button>
     <button class="tab" onclick="showTab('archiv')" id="tab-archiv">Archiv <span class="tab-badge" id="badge-archiv">–</span></button>
     <button class="tab" onclick="showTab('monitoring')" id="tab-monitoring" style="display:none">CMM Monitoring <span class="tab-badge" id="badge-monitoring">–</span></button>
-  </div>
-
-  <div style="display:flex;align-items:center;gap:10px;padding:10px 28px;background:#fff;border-bottom:1px solid var(--border)" id="search-bar">
-    <div style="position:relative;flex:1;max-width:380px">
-      <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3)" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#9aa0b0" stroke-width="1.5"/><line x1="10.5" y1="10.5" x2="14" y2="14" stroke="#9aa0b0" stroke-width="1.5" stroke-linecap="round"/></svg>
-      <input style="width:100%;padding:8px 32px 8px 34px;border:1.5px solid var(--border2);border-radius:var(--radius);font-size:14px;font-family:var(--font);color:var(--text);outline:none;background:#fff" id="search-input" type="text" placeholder="Artikelnummer scannen oder suchen..." oninput="onSearch(this.value)" onkeydown="onSearchKey(event)">
-      <button id="search-clear" onclick="clearSearch()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;display:none">✕</button>
-    </div>
-    <span style="font-size:12px;color:var(--text3)" id="search-hint"></span>
+    <button class="tab" onclick="showTab('auswertung')" id="tab-auswertung" style="display:none">Auswertung</button>
   </div>
 
   <div class="main screen active" id="screen-offen">
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <span class="filter-label" style="min-width:70px">Bereich:</span>
-        <button class="chip active" onclick="setFilter('alle',this)" id="chip-alle">Alle</button>
-        <button class="chip" onclick="setFilter('Drehen',this)" id="chip-drehen">Drehen</button>
-        <button class="chip" onclick="setFilter('Fräsen',this)" id="chip-fraesen">Fräsen</button>
-        <span class="filter-sep"></span>
-        <span class="count-label" id="count-label">–</span>
-        <button class="btn-new" onclick="openModal()">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="7" y1="1" x2="7" y2="13" stroke="white" stroke-width="2.5" stroke-linecap="round"/><line x1="1" y1="7" x2="13" y2="7" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
-          Neues Teil
-        </button>
+    <div class="toolbar">
+      <div class="search-box" id="search-bar">
+        <svg class="search-ico" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="#9aa0b0" stroke-width="1.5"/><line x1="10.5" y1="10.5" x2="14" y2="14" stroke="#9aa0b0" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input id="search-input" type="text" placeholder="Artikel scannen oder suchen..." oninput="onSearch(this.value)" onkeydown="onSearchKey(event)">
+        <button id="search-clear" onclick="clearSearch()">✕</button>
+        <span id="search-hint"></span>
       </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <span class="filter-label" style="min-width:70px">Status:</span>
-        <button class="chip active" onclick="setStatusFilter('alle',this)" id="chip-s-alle">Alle</button>
-        <button class="chip" onclick="setStatusFilter('Angekündigt',this)" id="chip-s-angek">Angekündigt</button>
-        <button class="chip" onclick="setStatusFilter('Bauteil in QS',this)" id="chip-s-qs">Bauteil in QS</button>
-        <button class="chip" onclick="setStatusFilter('Händische Messung',this)" id="chip-s-haend">Händische Messung</button>
-        <button class="chip" onclick="setStatusFilter('Rückgewiesen',this)" id="chip-s-rueck">Rückgewiesen</button>
+      <div class="seg">
+        <button class="seg-btn active" onclick="setFilter('alle',this)" id="chip-alle">Alle</button>
+        <button class="seg-btn" onclick="setFilter('Drehen',this)" id="chip-drehen">Drehen</button>
+        <button class="seg-btn" onclick="setFilter('Fräsen',this)" id="chip-fraesen">Fräsen</button>
       </div>
+      <div class="schips">
+        <button class="schip active" onclick="setStatusFilter('alle',this)" id="chip-s-alle">Alle <span class="schip-n" id="cnt-alle">0</span></button>
+        <button class="schip" onclick="setStatusFilter('Angekündigt',this)" id="chip-s-angek">Angekündigt <span class="schip-n" id="cnt-angek">0</span></button>
+        <button class="schip s-col-qs" onclick="setStatusFilter('Bauteil in QS',this)" id="chip-s-qs">In QS <span class="schip-n" id="cnt-qs">0</span></button>
+        <button class="schip s-col-haend" onclick="setStatusFilter('Händische Messung',this)" id="chip-s-haend">Händisch <span class="schip-n" id="cnt-haend">0</span></button>
+        <button class="schip s-col-rueck" onclick="setStatusFilter('Rückgewiesen',this)" id="chip-s-rueck">Rückgewiesen <span class="schip-n" id="cnt-rueck">0</span></button>
+      </div>
+      <span class="filter-sep"></span>
+      <span class="count-label" id="count-label">–</span>
+      <button class="btn-new" onclick="openModal()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><line x1="7" y1="1" x2="7" y2="13" stroke="white" stroke-width="2.5" stroke-linecap="round"/><line x1="1" y1="7" x2="13" y2="7" stroke="white" stroke-width="2.5" stroke-linecap="round"/></svg>
+        Neues Teil
+      </button>
     </div>
     <div id="list-loading" class="loading"><div class="spinner"></div>Lade ET Prioliste...</div>
     <div id="list-container" style="display:none">
-      <div id="status-summary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th style="width:36px;text-align:center">#</th><th>P</th><th>Artikel-Nr</th><th>Bezeichnung</th><th>Maschine</th><th>Bereich</th><th>Status</th><th>Geplante Ankunft</th><th>Seit</th><th>Notiz</th></tr></thead>
+          <thead><tr><th style="width:36px;text-align:center">#</th><th>P</th><th>Artikel-Nr</th><th>Bezeichnung</th><th>Maschine</th><th>Bereich</th><th>Status</th><th>Geplant</th><th>Seit</th><th>Notiz</th><th style="text-align:right">Aktion</th></tr></thead>
           <tbody id="parts-tbody"></tbody>
         </table>
       </div>
-      <div id="detail-container"></div>
     </div>
   </div>
+  <div id="detail-container" class="drawer"></div>
 
   <div class="main screen" id="screen-archiv">
     <div class="stats-row">
@@ -255,6 +337,29 @@ td.mono{font-family:var(--mono);font-size:13px}
       </div>
     </div>
   </div>
+</div>
+
+<!-- AUSWERTUNG SCREEN -->
+<div class="main screen" id="screen-auswertung">
+  <div class="toolbar">
+    <div class="seg" id="aw-zeit">
+      <button class="seg-btn" data-v="30">30 Tage</button>
+      <button class="seg-btn active" data-v="90">90 Tage</button>
+      <button class="seg-btn" data-v="365">12 Monate</button>
+      <button class="seg-btn" data-v="0">Alles</button>
+    </div>
+    <div class="seg" id="aw-bereich">
+      <button class="seg-btn active" data-v="alle">Alle Bereiche</button>
+      <button class="seg-btn" data-v="Drehen">Drehen</button>
+      <button class="seg-btn" data-v="Fräsen">Fräsen</button>
+    </div>
+    <span class="filter-sep"></span>
+    <span class="count-label" id="aw-stand"></span>
+    <button class="btn btn-sm" onclick="loadAuswertung(true)">↻ Neu laden</button>
+    <button class="btn btn-sm" onclick="exportVorgaengeCSV()">CSV-Export</button>
+  </div>
+  <div id="aw-loading" class="loading"><div class="spinner"></div>Lade komplette Historie...</div>
+  <div id="aw-content" style="display:none"></div>
 </div>
 
 <!-- MONITORING SCREEN -->
@@ -380,6 +485,23 @@ td.mono{font-family:var(--mono);font-size:13px}
     </div>
   </div>
 </div>
+<div class="modal-overlay" id="rueck-modal" onclick="if(event.target===this)closeRueckModal()">
+  <div class="modal" style="max-width:460px">
+    <button class="modal-close" onclick="closeRueckModal()">✕</button>
+    <div class="modal-title" style="color:var(--p1)">Bauteil zurückweisen</div>
+    <div id="rm-info" style="font-size:14px;color:var(--text2);margin-bottom:14px"></div>
+    <label style="font-size:11px;color:var(--p1);font-family:var(--mono);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Rückweisungsgrund *</label>
+    <textarea id="rm-input" placeholder="z.B. Pos12, Pos23 – Position" onkeydown="rueckModalKey(event)"></textarea>
+    <div class="rm-hint">Positionsnummer(n) zuerst, dann Stichwort · Enter = speichern · Esc = abbrechen</div>
+    <div class="rm-err" id="rm-err">Bitte einen Grund angeben.</div>
+    <div class="form-actions">
+      <button class="btn btn-danger" id="rm-save" onclick="confirmRueck()">Zurückweisen</button>
+      <button class="btn" onclick="closeRueckModal()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+<div class="undo-toast" id="undo-toast"><span id="undo-msg"></span><button onclick="doUndo()">Rückgängig</button><div class="undo-bar" id="undo-bar"></div></div>
+<div class="aw-tip" id="aw-tip"></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -516,6 +638,7 @@ async function loadRolle(){
     const rolleColors={Admin:['var(--p1lt)','var(--p1)'],Teamleiter:['#fff0e0','#d06000'],QS:['var(--p2lt)','var(--p2)']};
     const [bg,col]=rolleColors[userRolle]||['var(--p3lt)','var(--p3)'];
     if(badge){badge.textContent=userRolle;badge.style.background=bg;badge.style.color=col;}
+    if(canAdmin()){const at=document.getElementById('tab-auswertung');if(at)at.style.display='';}
     if(userRolle==='Admin'){
       const mt=document.getElementById('tab-monitoring');
       if(mt)mt.style.display='';
@@ -539,22 +662,12 @@ async function loadParts(){
     document.getElementById('list-loading').style.display='none';
     document.getElementById('list-container').style.display='block';
     document.getElementById('badge-archiv').textContent=allParts.filter(p=>DONE.includes(p.status)).length;
-    // Restore saved filters
+    // Gespeicherte Filter wiederherstellen
     try{
-      const savedBereich=localStorage.getItem('et_bereich');
-      const savedStatus=localStorage.getItem('et_status');
-      if(savedBereich&&savedBereich!=='alle'){
-        currentFilter=savedBereich;
-        const bereichIdMap={'alle':'chip-alle','Drehen':'chip-drehen','Fräsen':'chip-fraesen'};
-        const btn=document.getElementById(bereichIdMap[savedBereich]||'chip-alle');
-        if(btn){document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');}
-      }
-      if(savedStatus&&savedStatus!=='alle'){
-        statusFilter=savedStatus;
-        const statusMap={'Angekündigt':'chip-s-angek','Bauteil in QS':'chip-s-qs','Händische Messung':'chip-s-haend','Rückgewiesen':'chip-s-rueck'};
-        const btnId=statusMap[savedStatus];
-        if(btnId){const btn=document.getElementById(btnId);if(btn){document.querySelectorAll('.chip').forEach(c=>{if(['chip-s-alle','chip-s-angek','chip-s-qs','chip-s-haend','chip-s-rueck'].includes(c.id))c.classList.remove('active')});btn.classList.add('active');document.getElementById('chip-s-alle').classList.remove('active');}}
-      }
+      const sb=localStorage.getItem('et_bereich');
+      const ss=localStorage.getItem('et_status');
+      if(sb&&BEREICH_CHIPS[sb]){currentFilter=sb;markActive(Object.values(BEREICH_CHIPS),BEREICH_CHIPS[sb]);}
+      if(ss&&STATUS_CHIPS[ss]){statusFilter=ss;markActive(Object.values(STATUS_CHIPS),STATUS_CHIPS[ss]);}
     }catch(e){}
     renderList();
     renderDashboard();
@@ -562,7 +675,31 @@ async function loadParts(){
 }
 async function updateItem(id,data){const digest=await getDigest();const listType=await getListItemType();await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items(${id})`,{method:'POST',headers:{'Content-Type':'application/json;odata=verbose','X-RequestDigest':digest,'X-HTTP-Method':'MERGE','IF-MATCH':'*'},body:JSON.stringify({'__metadata':{'type':listType},...data})});}
 async function createItem(data){const digest=await getDigest();const listType=await getListItemType();return spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items`,{method:'POST',headers:{'Content-Type':'application/json;odata=verbose','X-RequestDigest':digest},body:JSON.stringify({'__metadata':{'type':listType},...data})});}
+// Spalten Versuch/VorgangID über den Anzeigenamen suchen (robust gegen abweichende interne Namen)
+let _ftrDetected=false,_ftrStatus='unbekannt';
+async function detectFtrFields(){
+  if(_ftrDetected)return;
+  _ftrDetected=true;
+  try{
+    const d=await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/fields?$select=Title,InternalName,Hidden&$top=500`);
+    const fs=d.d.results.filter(f=>!f.Hidden);
+    const n=s=>String(s||'').toLowerCase().replace(/_x0020_/g,'').replace(/[\s_\-]/g,'');
+    const find=names=>fs.find(f=>names.includes(n(f.Title)))||fs.find(f=>names.includes(n(f.InternalName)));
+    const v=find(['versuch']),g=find(['vorgangid','vorgang']);
+    if(v&&g){
+      FX.versuch=v.InternalName;FX.vorgang=g.InternalName;ftrFieldsOk=true;
+      _ftrStatus=`aktiv (${v.InternalName}, ${g.InternalName})`;
+    }else{
+      ftrFieldsOk=false;
+      const miss=[!v?'Versuch':null,!g?'VorgangID':null].filter(Boolean).join(' + ');
+      _ftrStatus=`Spalte(n) nicht gefunden: ${miss}`;
+      setTimeout(()=>showToast(`Hinweis: SharePoint-Spalte ${miss} nicht gefunden – Versuche werden nicht gespeichert`,'err'),1500);
+    }
+    console.info('FTR-Spalten:',_ftrStatus);
+  }catch(e){console.warn('Spaltenprüfung fehlgeschlagen',e);}
+}
 async function fetchAllParts(){
+  await detectFtrFields();
   const url=()=>`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items?$select=${selFields()}&$top=500&$orderby=ID desc`;
   try{
     const d=await spFetch(url());
@@ -570,8 +707,9 @@ async function fetchAllParts(){
   }catch(e){
     if(!ftrFieldsOk)throw e;
     // Spalten Versuch/VorgangID fehlen in SharePoint -> ohne sie weiterarbeiten
-    ftrFieldsOk=false;
-    console.warn('FTR-Spalten nicht gefunden, Versuche werden aus der Historie abgeleitet.',e);
+    ftrFieldsOk=false;_ftrStatus='Fehler beim Lesen der Spalten: '+e.message.slice(0,120);
+    console.warn('FTR-Spalten nicht lesbar, Versuche werden aus der Historie abgeleitet.',e);
+    showToast('Hinweis: Spalten Versuch/VorgangID nicht lesbar – Versuche werden nicht gespeichert','err');
     const d=await spFetch(url());
     return d.d.results.map(mapPart);
   }
@@ -591,117 +729,102 @@ function durStr(m){if(m===null)return'–';if(m<60)return`${m} min`;return`${Mat
 function sCss(s){return STATUS_FLOW[s]?.css||'s-angek';}
 function bCss(b){if(b==='Drehen'||b==='Dreherei')return'b-drehen';if(b==='Fräsen'||b==='Fräserei')return'b-fraesen';return'';}
 
+function sortQueue(a,b){
+  const ga=prioGroup(a.prio),gb=prioGroup(b.prio);
+  const pkP2=new Set([1,3]); // PK und Prio 2 dürfen gemischt werden
+  if(pkP2.has(ga)&&pkP2.has(gb)){const rd=a.reihenfolge-b.reihenfolge;if(rd!==0)return rd;return ga-gb;}
+  if(ga!==gb)return ga-gb;
+  const rd=a.reihenfolge-b.reihenfolge;if(rd!==0)return rd;
+  return (a.bereich==='Drehen'?0:1)-(b.bereich==='Drehen'?0:1);
+}
+function isWaitingRejected(p){return p.status==='Rückgewiesen'&&_lastRejByNr[normNr(p.nr)]?.id===p.id;}
+function rowActions(p){
+  if(p.status==='Rückgewiesen'&&isWaitingRejected(p))
+    return `<div class="row-act"><button class="act-again" onclick="event.stopPropagation();erneutMessen(${p.id})" title="Neuen Versuch anlegen">↻ Erneut messen</button></div>`;
+  if(canQS()&&(p.status==='Bauteil in QS'||p.status==='Händische Messung'))
+    return `<div class="row-act"><button class="act-btn act-ok" onclick="event.stopPropagation();quickFreigabe(${p.id})" title="Freigeben">✓</button><button class="act-btn act-no" onclick="event.stopPropagation();openRueckModal(${p.id})" title="Zurückweisen">✗</button></div>`;
+  return '';
+}
+function partRow(p,opts={}){
+  const drag=opts.drag?`draggable="${canAdmin()}" ondragstart="dragStart(event,${p.id})" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropOn(event,${p.id})"`:'';
+  const cls=[selectedId===p.id?'selected':'',opts.cls||''].join(' ');
+  return `<tr ${drag} onclick="selectPart(${p.id})" class="${cls}" style="${opts.style||''}">
+    <td class="mono" style="text-align:center;font-size:12px;color:var(--text3);font-weight:600;padding:14px 8px;min-width:36px">${opts.idx||''}</td>
+    <td><span class="prio-badge prio-${p.prio}">${p.prio}</span></td>
+    <td class="mono" style="font-weight:600;white-space:nowrap">${p.nr}${versuchBadge(p)}</td><td>${p.bez}</td>
+    <td class="mono">${p.machine}</td>
+    <td><span class="bereich-badge ${bCss(p.bereich)}">${p.bereich}</span></td>
+    <td><span class="status-badge ${sCss(p.status)}">${p.status}</span></td>
+    <td class="mono" style="font-size:12px">${opts.done?'–':fmtGeplant(p)}</td>
+    <td class="mono" style="color:var(--text2)">${fmtTime(opts.time||p.ts_qs||p.ts_angek)}</td>
+    <td><span class="notiz-text">${opts.showRueck&&p.rueck?"<span style='color:var(--p1);font-weight:600'>✗</span> "+p.rueck:notizHtml(p)}</span></td>
+    <td>${opts.done?'':rowActions(p)}</td>
+  </tr>`;
+}
 function renderList(){
   computeChains();
   const today=new Date().toDateString();
-  const baseFilter=p=>{
-    if(currentFilter==='Drehen')return p.bereich==='Drehen';
-    if(currentFilter==='Fräsen')return p.bereich==='Fräsen';
-    return true;
-  };
-  const showDoneFilter=statusFilter==='Rückgewiesen'||statusFilter==='Freigegeben';
-  const now2=new Date();
-  const shiftStart2=new Date(now2);
-  if(now2.getHours()<6)shiftStart2.setDate(shiftStart2.getDate()-1);
-  shiftStart2.setHours(6,0,0,0);
-  const rejNrs=new Set(allParts.filter(p=>{
-    if(p.status!=='Rückgewiesen')return false;
-    return !allParts.some(x=>x.id!==p.id&&normNr(x.nr)===normNr(p.nr)&&!DONE.includes(x.status));
-  }).map(p=>normNr(p.nr)));
-  const openParts=allParts
-    .filter(p=>{
-      if(showDoneFilter)return p.status===statusFilter;
-      if(!DONE.includes(p.status))return true;
-      // Include rejected parts without re-measurement
-      if(p.status==='Rückgewiesen'&&rejNrs.has(normNr(p.nr))&&_lastRejByNr[normNr(p.nr)]?.id===p.id)return true;
-      return false;
-    })
-    .filter(baseFilter)
-    .filter(p=>!showDoneFilter?(statusFilter==='alle'||p.status===statusFilter):true)
-    .filter(p=>matchSearch(p,searchQuery))
-    .sort((a,b)=>{
-      const ga=prioGroup(a.prio),gb=prioGroup(b.prio);
-      // PK (3) and Prio2 (1) can be interleaved via Reihenfolge
-      const pkP2=new Set([1,3]);
-      if(pkP2.has(ga)&&pkP2.has(gb)){
-        const rd=a.reihenfolge-b.reihenfolge;
-        if(rd!==0)return rd;
-        return ga-gb;
-      }
-      if(ga!==gb)return ga-gb;
-      const rd=a.reihenfolge-b.reihenfolge;
-      if(rd!==0)return rd;
-      return (a.bereich==='Drehen'?0:1)-(b.bereich==='Drehen'?0:1);
-    });
-  // Schichtübergabe: "heute" = 06:00 bis 05:59 nächsten Tag
+  const inBereich=p=>currentFilter==='alle'||p.bereich===currentFilter;
   const now=new Date();
   const shiftStart=new Date(now);
   if(now.getHours()<6)shiftStart.setDate(shiftStart.getDate()-1);
   shiftStart.setHours(6,0,0,0);
 
-  // Rückgewiesene ohne neue Messung: check if Artikelnummer already re-measured
-  const rejectedWithoutRemeasure=allParts.filter(p=>{
-    if(p.status!=='Rückgewiesen')return false;
-    // Check if there's another open part with same Artikelnummer
-    const hasNew=allParts.some(x=>x.id!==p.id&&normNr(x.nr)===normNr(p.nr)&&!DONE.includes(x.status));
-    return !hasNew; // keep in list if no new measurement started
-  });
-  const rejectedNrs=new Set(rejectedWithoutRemeasure.map(p=>normNr(p.nr)));
+  // Grundmengen (nach Bereich + Suche)
+  const base=allParts.filter(inBereich).filter(p=>matchSearch(p,searchQuery));
+  const waiting=base.filter(isWaitingRejected).sort((a,b)=>(b.ts_abg||'')>(a.ts_abg||'')?1:-1);
+  const queue=base.filter(p=>!DONE.includes(p.status)).sort(sortQueue);
+  const doneToday=base.filter(p=>DONE.includes(p.status)&&!isWaitingRejected(p)&&p.ts_abg&&new Date(p.ts_abg)>=shiftStart)
+    .sort((a,b)=>(b.ts_abg||'')>(a.ts_abg||'')?1:-1);
 
-  const doneTodayParts=(currentFilter==='alle'&&statusFilter==='alle')?allParts
-    .filter(p=>{
-      if(!DONE.includes(p.status))return false;
-      if(p.status==='Rückgewiesen'&&rejectedNrs.has(normNr(p.nr))&&_lastRejByNr[normNr(p.nr)]?.id===p.id)return false; // shown separately
-      const abg=p.ts_abg?new Date(p.ts_abg):null;
-      return abg&&abg>=shiftStart;
-    })
-    .sort((a,b)=>(b.ts_abg||'')>(a.ts_abg||'')?1:-1):[];
-  document.getElementById('count-label').textContent=`${openParts.length} offen · ${doneTodayParts.length} heute fertig`;
+  // Zähler in den Status-Chips
+  const setN=(id,n)=>{const el=document.getElementById(id);if(el){el.textContent=n;el.classList.toggle('has',n>0);}};
+  setN('cnt-alle',queue.length+waiting.length);
+  setN('cnt-angek',queue.filter(p=>p.status==='Angekündigt').length);
+  setN('cnt-qs',queue.filter(p=>p.status==='Bauteil in QS').length);
+  setN('cnt-haend',queue.filter(p=>p.status==='Händische Messung').length);
+  setN('cnt-rueck',waiting.length);
+
+  // Statusfilter anwenden
+  const showWaiting=statusFilter==='alle'||statusFilter==='Rückgewiesen';
+  const showQueue=statusFilter!=='Rückgewiesen';
+  const queueF=queue.filter(p=>statusFilter==='alle'||p.status===statusFilter);
+  const showDone=statusFilter==='alle';
+
+  document.getElementById('count-label').textContent=`${queue.length} offen · ${doneToday.length} heute fertig`;
   document.getElementById('badge-offen').textContent=allParts.filter(p=>{if(!DONE.includes(p.status))return true;const d=p.ts_abg?new Date(p.ts_abg).toDateString():null;return d===today;}).length;
-  const openRows=openParts.map((p,idx)=>`<tr draggable="${canAdmin()}" ondragstart="dragStart(event,${p.id})" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropOn(event,${p.id})" onclick="selectPart(${p.id})" class="${selectedId===p.id?'selected':''}" style="cursor:grab">
-    <td class="mono" style="text-align:center;font-size:12px;color:var(--text3);font-weight:600;padding:14px 8px;min-width:36px">${idx+1}</td>
-    <td><span class="prio-badge prio-${p.prio}">${p.prio}</span></td>
-    <td class="mono" style="font-weight:600;white-space:nowrap">${p.nr}${versuchBadge(p)}</td><td>${p.bez}</td>
-    <td class="mono">${p.machine}</td>
-    <td><span class="bereich-badge ${bCss(p.bereich)}">${p.bereich}</span></td>
-    <td><span class="status-badge ${sCss(p.status)}">${p.status}</span></td>
-    <td class="mono" style="font-size:12px">${fmtGeplant(p)}</td>
-    <td class="mono" style="color:var(--text2)">${fmtTime(p.ts_qs||p.ts_angek)}</td>
-    <td><span class="notiz-text">${notizHtml(p)}</span></td>
-  </tr>`).join('');
-  const separatorRow=doneTodayParts.length>0?`<tr style="pointer-events:none">
-    <td colspan="10" style="padding:6px 14px;background:#f0f4f8;border-top:2px solid var(--border2)">
-      <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;font-family:var(--mono)">✓ Heute abgeschlossen – ${doneTodayParts.length} ${doneTodayParts.length===1?'Teil':'Teile'}</span>
-    </td>
-  </tr>`:'';
-  const doneRows=doneTodayParts.map(p=>`<tr onclick="selectPart(${p.id})" class="${selectedId===p.id?'selected':''}" style="opacity:0.65">
-    <td></td>
-    <td><span class="prio-badge prio-${p.prio}">${p.prio}</span></td>
-    <td class="mono" style="font-weight:600;white-space:nowrap">${p.nr}${versuchBadge(p)}</td><td>${p.bez}</td>
-    <td class="mono">${p.machine}</td>
-    <td><span class="bereich-badge ${bCss(p.bereich)}">${p.bereich}</span></td>
-    <td><span class="status-badge ${sCss(p.status)}">${p.status}</span></td>
-    <td class="mono" style="font-size:12px">–</td>
-    <td class="mono" style="color:var(--text2)">${fmtTime(p.ts_abg)}</td>
-    <td><span class="notiz-text">${notizHtml(p)}</span></td>
-  </tr>`).join('');
-  const newHtml=openRows+separatorRow+doneRows;
+
+  let html='';
+  if(showWaiting&&waiting.length){
+    html+=`<tr class="sec-row sec-rueck"><td colspan="11">✗ Wartet auf Korrektur – ${waiting.length} ${waiting.length===1?'Teil':'Teile'}</td></tr>`;
+    html+=waiting.map(p=>partRow(p,{cls:'row-rueck',time:p.ts_abg,showRueck:true})).join('');
+  }
+  if(showQueue){
+    if(showWaiting&&waiting.length&&queueF.length)html+=`<tr class="sec-row sec-queue"><td colspan="11">Messreihenfolge</td></tr>`;
+    html+=queueF.map((p,i)=>partRow(p,{drag:true,idx:i+1,style:'cursor:grab'})).join('');
+  }
+  if(!html)html=`<tr><td colspan="11" style="text-align:center;padding:28px;color:var(--text3)">Keine Teile ${statusFilter!=='alle'?'mit diesem Status':''}</td></tr>`;
+  if(showDone&&doneToday.length){
+    html+=`<tr class="sec-row sec-done"><td colspan="11">✓ Heute abgeschlossen – ${doneToday.length} ${doneToday.length===1?'Teil':'Teile'}</td></tr>`;
+    html+=doneToday.map(p=>partRow(p,{done:true,time:p.ts_abg,style:'opacity:0.65'})).join('');
+  }
   const tbody=document.getElementById('parts-tbody');
-  if(tbody.innerHTML!==newHtml){
+  if(tbody.innerHTML!==html){
     const scrollY=window.scrollY;
-    tbody.innerHTML=newHtml;
+    tbody.innerHTML=html;
     window.scrollTo({top:scrollY,behavior:'instant'});
   }
   renderDetail();
-  renderStatusSummary();
   if(document.getElementById('screen-dashboard')?.classList.contains('active'))renderDashboard();
 }
 
 function renderDetail(){
   const cont=document.getElementById('detail-container');
-  if(!selectedId){cont.innerHTML='';return;}
+  const close=()=>{cont.classList.remove('open');document.body.classList.remove('drawer-open');cont.innerHTML='';};
+  if(!selectedId){close();return;}
   const p=allParts.find(x=>x.id===selectedId);
-  if(!p){cont.innerHTML='';return;}
+  if(!p){close();return;}
+  cont.classList.add('open');document.body.classList.add('drawer-open');
   const dur=durMin(p.ts_qs,p.ts_abg);
   const next=STATUS_FLOW[p.status]?.next||[];
   const hasWarning=p.notiz&&p.notiz.includes('⚠');
@@ -715,7 +838,7 @@ function renderDetail(){
     {label:'Abgeschlossen',val:p.ts_abg,key:'ts_abg'},
   ];
 
-  cont.innerHTML=`<div class="detail-panel" style="margin-top:8px">
+  cont.innerHTML=`<div class="detail-panel">
     <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:14px">
       <span class="prio-badge prio-${p.prio}" style="width:30px;height:30px;font-size:14px;flex-shrink:0">${p.prio}</span>
       <div style="flex:1;min-width:0">
@@ -750,7 +873,7 @@ function renderDetail(){
 
     ${(()=>{const st=artikelStats(p.nr);const cell=(l,v,c)=>`<div style="text-align:center;min-width:90px"><div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono)">${l}</div><div style="font-size:16px;font-family:var(--mono);font-weight:700;margin-top:3px;color:${c}">${v}</div></div>`;
       return `<div style="display:flex;align-items:center;gap:6px;padding:10px 14px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;flex-wrap:wrap">
-        <span style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);margin-right:8px">Artikel ${normNr(p.nr)}</span>
+        <span style="flex-basis:100%;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);margin-bottom:2px">Artikel ${normNr(p.nr)}</span>
         ${cell('Dieser Vorgang',p.vs+'. Versuch',p.vs>1?'var(--p1)':'var(--text)')}
         ${cell('Rückweisungen ges.',st.rueck,st.rueck>0?'var(--p1)':'var(--text)')}
         ${cell('Vorgänge',st.vorgaenge,'var(--text)')}
@@ -763,19 +886,12 @@ function renderDetail(){
     <!-- Aktionen -->
     ${next.length>0?`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border)">
       ${next.filter(s=>s!=='Freigegeben'&&s!=='Rückgewiesen').map(s=>`<button class="btn btn-primary" onclick="advanceStatus(${p.id},'${s}')">${s} →</button>`).join('')}
-      ${next.filter(s=>s==='Freigegeben'||s==='Rückgewiesen').map(s=>`<button class="btn ${s==='Freigegeben'?'btn-success':'btn-danger'}" onclick="advanceStatus(${p.id},'${s}')">${s} →</button>`).join('')}
-      ${canAdmin()?`<button class="btn btn-sm" onclick="editPrio(${p.id})" style="margin-left:auto;color:var(--text3)">Prio ändern</button><button class="btn btn-danger btn-sm" onclick="deletePart(${p.id})">Löschen</button>`:''}
+      ${next.includes('Freigegeben')?`<button class="btn btn-success" onclick="quickFreigabe(${p.id})">✓ Freigeben</button>`:''}
+      ${next.includes('Rückgewiesen')?`<button class="btn btn-danger" onclick="openRueckModal(${p.id})">✗ Zurückweisen</button>`:''}
     </div>
-    <div class="rueck-section" id="rueck-section">
-      <label>Rückweisungsgrund *</label>
-      <textarea id="rueck-input" placeholder="Grund für Rückweisung..."></textarea>
-      <div style="margin-top:8px;display:flex;gap:8px">
-        <button class="btn btn-danger btn-sm" onclick="confirmRueck(${p.id})">Bestätigen</button>
-        <button class="btn btn-sm" onclick="document.getElementById('rueck-section').style.display='none'">Abbrechen</button>
-      </div>
-    </div>`:`<div style="display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--border)">
+    ${canAdmin()?`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-sm" onclick="editPrio(${p.id})" style="color:var(--text3)">Prio ändern</button><button class="btn btn-danger btn-sm" onclick="deletePart(${p.id})">Löschen</button></div>`:''}`:`<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border)">
       <span style="font-size:13px;color:${p.status==='Freigegeben'?'var(--p3)':'var(--p1)'};font-weight:600">${p.status==='Freigegeben'?'✓ Freigegeben':'✗ Rückgewiesen'}</span>
-      ${p.status==='Rückgewiesen'?`<button class="btn btn-primary btn-sm" onclick="erneutMessen(${p.id})">Erneut messen →</button>`:''}
+      ${p.status==='Rückgewiesen'&&isWaitingRejected(p)?`<button class="btn btn-primary btn-sm" onclick="erneutMessen(${p.id})">↻ Erneut messen</button>`:''}
       ${canAdmin()?`<button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="deletePart(${p.id})">Löschen</button>`:''}
     </div>`}
 
@@ -788,25 +904,86 @@ function renderDetail(){
         ${p.angelegtVon?`<span><strong style="color:var(--text3)">Angelegt:</strong> ${p.angelegtVon}</span>`:''}
         ${p.geaendertVon?`<span><strong style="color:var(--text3)">Geändert:</strong> ${p.geaendertVon}</span>`:''}
         ${p.letzteAenderung?`<span><strong style="color:var(--text3)">Letzte Änd.:</strong> ${p.letzteAenderung}</span>`:''}
+        <span><strong style="color:var(--text3)">Gespeichert:</strong> Versuch ${p.versuchStored??'–'} · VorgangID ${p.vorgangStored??'–'}</span>
+        <span><strong style="color:var(--text3)">FTR-Spalten:</strong> ${_ftrStatus}</span>
       </div>
     </details>
   </div>`;
 }
 
-function selectPart(id){selectedId=selectedId===id?null:id;renderList();if(selectedId)setTimeout(()=>document.getElementById('detail-container').scrollIntoView({behavior:'smooth',block:'nearest'}),50);}
-async function advanceStatus(id,s){if(s==='Rückgewiesen'){document.getElementById('rueck-section').style.display='block';document.getElementById('rueck-input').focus();return;}await doStatus(id,s,'');}
-async function confirmRueck(id){
-  const g=document.getElementById('rueck-input').value.trim();
+function selectPart(id){selectedId=selectedId===id?null:id;renderList();}
+async function advanceStatus(id,s){
+  if(s==='Rückgewiesen')return openRueckModal(id);
+  if(s==='Freigegeben')return quickFreigabe(id);
+  await doStatus(id,s,'');
+}
+// ── Rückweisungs-Dialog ──
+let _rueckId=null;
+function openRueckModal(id){
+  const p=allParts.find(x=>x.id===id);if(!p)return;
+  _rueckId=id;computeChains();
+  const st=artikelStats(p.nr);
+  document.getElementById('rm-info').innerHTML=`<strong style="font-family:var(--mono);color:var(--text)">${p.nr}</strong> · ${p.bez||''} · Maschine ${p.machine}<br><span style="font-size:12px;color:var(--text3)">${p.vs}. Versuch · wird die ${st.rueck+1}. Rückweisung für diesen Artikel</span>`;
+  const inp=document.getElementById('rm-input');inp.value='';
+  document.getElementById('rm-err').style.display='none';
+  document.getElementById('rm-save').disabled=false;
+  document.getElementById('rueck-modal').classList.add('show');
+  setTimeout(()=>inp.focus(),50);
+}
+function closeRueckModal(){document.getElementById('rueck-modal').classList.remove('show');_rueckId=null;}
+function rueckModalKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();confirmRueck();}
+  if(e.key==='Escape'){e.preventDefault();closeRueckModal();}
+}
+async function confirmRueck(){
+  const id=_rueckId;if(!id)return;
+  const g=document.getElementById('rm-input').value.trim();
+  if(!g){document.getElementById('rm-err').style.display='block';document.getElementById('rm-input').focus();return;}
+  document.getElementById('rm-save').disabled=true;
   const p=allParts.find(x=>x.id===id);
-  await doStatus(id,'Rückgewiesen',g);
-  if(p&&p.status==='Rückgewiesen'){
+  const ok=await doStatus(id,'Rückgewiesen',g);
+  if(!ok){document.getElementById('rm-save').disabled=false;return;}
+  closeRueckModal();
+  if(p){
     computeChains();
     const st=artikelStats(p.nr);
-    showToast(`Rückweisung gespeichert · ${p.vs}. Versuch · ${st.rueck}. Rückweisung für ${normNr(p.nr)}`,'ok');
+    showToast(`Zurückgewiesen · ${p.vs}. Versuch · ${st.rueck}. Rückweisung für ${normNr(p.nr)}`,'ok');
   }
 }
-async function doStatus(id,newStatus,rueck){
-  showToast('Speichere...','');
+// ── Freigabe mit Rückgängig ──
+let _undoFn=null,_undoTimer=null;
+async function quickFreigabe(id){
+  const p=allParts.find(x=>x.id===id);if(!p)return;
+  const prev={status:p.status,ts_abg:p.ts_abg};
+  const ok=await doStatus(id,'Freigegeben','',true);
+  if(!ok)return;
+  showUndo(`${p.nr} freigegeben`,async()=>{
+    try{
+      await updateItem(id,{[F.status]:prev.status,[F.ts_abg]:prev.ts_abg||null,[F.geaendertVon]:document.getElementById('user-name').textContent,[F.letzteAenderung]:'Freigabe rückgängig'});
+      p.status=prev.status;p.ts_abg=prev.ts_abg||null;
+      showToast(`${p.nr}: Freigabe rückgängig gemacht`,'ok');renderList();
+    }catch(e){showToast('Fehler beim Rückgängig machen: '+e.message,'err');}
+  });
+}
+function showUndo(msg,fn){
+  _undoFn=fn;clearTimeout(_undoTimer);
+  const t=document.getElementById('undo-toast'),bar=document.getElementById('undo-bar');
+  document.getElementById('undo-msg').textContent='✓ '+msg;
+  bar.style.transition='none';bar.style.width='100%';
+  t.classList.add('show');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{bar.style.transition='width 6s linear';bar.style.width='0%';}));
+  _undoTimer=setTimeout(hideUndo,6000);
+}
+function hideUndo(){document.getElementById('undo-toast').classList.remove('show');_undoFn=null;}
+async function doUndo(){const fn=_undoFn;hideUndo();clearTimeout(_undoTimer);if(fn)await fn();}
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape')return;
+  if(document.getElementById('rueck-modal')?.classList.contains('show'))return;
+  if(document.querySelector('.modal-overlay.show'))return;
+  if(selectedId){selectedId=null;renderList();}
+});
+async function doStatus(id,newStatus,rueck,silent){
+  if(!silent)showToast('Speichere...','');
   const now=new Date().toISOString();
   const userName=document.getElementById('user-name').textContent;
   const patch={[F.status]:newStatus,[F.geaendertVon]:userName,[F.letzteAenderung]:'Status → '+newStatus};
@@ -819,8 +996,10 @@ async function doStatus(id,newStatus,rueck){
     const p=allParts.find(x=>x.id===id);
     if(p){p.status=newStatus;if(patch[F.ts_qs])p.ts_qs=now;if(patch[F.ts_haend])p.ts_haend=now;if(patch[F.ts_abg])p.ts_abg=now;if(rueck)p.rueck=rueck;}
     if(DONE.includes(newStatus)){selectedId=null;document.getElementById('badge-archiv').textContent=allParts.filter(p=>DONE.includes(p.status)).length;}
-    showToast(`Status: ${newStatus}`,'ok');renderList();
-  }catch(e){showToast('Fehler: '+e.message,'err');}
+    if(!silent)showToast(`Status: ${newStatus}`,'ok');
+    renderList();
+    return true;
+  }catch(e){showToast('Fehler: '+e.message,'err');return false;}
 }
 let _prioEditId=null;
 function editPrio(id){
@@ -931,20 +1110,7 @@ function renderArchiv(){
   document.getElementById('archiv-loading').style.display='none';
   document.getElementById('archiv-container').style.display='block';
 }
-function renderStatusSummary(){
-  const el=document.getElementById('status-summary');
-  if(!el)return;
-  const angek=allParts.filter(p=>p.status==='Angekündigt').length;
-  const qs=allParts.filter(p=>p.status==='Bauteil in QS').length;
-  const haend=allParts.filter(p=>p.status==='Händische Messung').length;
-  const chip=(label,val,col,bg,border)=>`<div style="display:flex;align-items:center;gap:8px;padding:7px 16px;background:${bg};border:1px solid ${border};border-radius:20px;font-size:13px;font-weight:500;color:${col}">
-    <span>${label}</span><span style="font-family:var(--mono);font-weight:700;font-size:15px">${val}</span>
-  </div>`;
-  el.innerHTML=
-    chip('Angekündigt',angek,'var(--text2)','#fff','var(--border)')+
-    chip('In QS',qs,'var(--accent)','var(--accentlt)','var(--accent)')+
-    chip('Händische Messung',haend,'#4a60b0','#f0f4ff','#c0ccee');
-}
+function renderStatusSummary(){} // Zähler sind jetzt in den Status-Chips
 
 function showTab(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -954,6 +1120,7 @@ function showTab(id){
   document.getElementById('search-bar').style.display=(id==='offen')?'flex':'none';
   if(id==='archiv')renderArchiv();
   if(id==='monitoring')loadMonitoringData();
+  if(id==='auswertung')loadAuswertung();
 }
 
 function renderDashboard(){
@@ -1037,8 +1204,11 @@ function renderDashboard(){
     </div>`:''}
   `;
 }
-function setStatusFilter(s,btn){try{localStorage.setItem('et_status',s);}catch(e){}statusFilter=s;['chip-s-alle','chip-s-angek','chip-s-qs','chip-s-haend','chip-s-rueck'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active')});btn.classList.add('active');selectedId=null;renderList();}
-function setFilter(f,btn){try{localStorage.setItem('et_bereich',f);}catch(e){}currentFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');selectedId=null;renderList();}
+function markActive(ids,activeId,cls){ids.forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id===activeId);});}
+const STATUS_CHIPS={'alle':'chip-s-alle','Angekündigt':'chip-s-angek','Bauteil in QS':'chip-s-qs','Händische Messung':'chip-s-haend','Rückgewiesen':'chip-s-rueck'};
+const BEREICH_CHIPS={'alle':'chip-alle','Drehen':'chip-drehen','Fräsen':'chip-fraesen'};
+function setStatusFilter(s){try{localStorage.setItem('et_status',s);}catch(e){}statusFilter=s;markActive(Object.values(STATUS_CHIPS),STATUS_CHIPS[s]);renderList();}
+function setFilter(f){try{localStorage.setItem('et_bereich',f);}catch(e){}currentFilter=f;markActive(Object.values(BEREICH_CHIPS),BEREICH_CHIPS[f]);renderList();}
 let toastTimer;
 function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast show ${type}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3000);}
 
@@ -1312,6 +1482,158 @@ function openScannerModal(){
   setTimeout(()=>document.getElementById('f-nr').focus(),100);
 }
 
+
+
+// ── AUSWERTUNG (FTR) ──────────────────────────────────────────────────────
+let awParts=null,awLoadedAt=null,awZeit=90,awBereich='alle',awMaschine=null,awSort={m:['ftr',1],t:['rueck',-1]},awTeilSuche='';
+async function fetchHistory(){
+  let url=`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items?$select=${selFields()}&$top=2000&$orderby=ID desc`;
+  const out=[];
+  while(url){const d=await spFetch(url);out.push(...d.d.results.map(mapPart));url=d.d.__next||null;}
+  return out;
+}
+async function loadAuswertung(force){
+  if(!canAdmin())return;
+  if(!awParts||force){
+    document.getElementById('aw-loading').style.display='flex';
+    document.getElementById('aw-content').style.display='none';
+    try{await detectFtrFields();awParts=await fetchHistory();awLoadedAt=new Date();}
+    catch(e){document.getElementById('aw-loading').innerHTML=`<div style="color:var(--p1)">Fehler: ${e.message}</div>`;return;}
+  }
+  document.getElementById('aw-loading').style.display='none';
+  document.getElementById('aw-content').style.display='block';
+  renderAuswertung();
+}
+// Vorgänge aus der kompletten Historie bilden
+function buildVorgaenge(list){
+  const saved=allParts;allParts=list;computeChains();allParts=saved;computeChains();
+  const ch={};list.forEach(p=>{(ch[p.vk]=ch[p.vk]||[]).push(p);});
+  return Object.values(ch).map(c=>{
+    c.sort((a,b)=>a.id-b.id);
+    const first=c[0],last=c[c.length-1];
+    const frei=last.status==='Freigegeben';
+    const rueckItems=c.filter(x=>x.status==='Rückgewiesen');
+    return{key:first.id,nr:normNr(first.nr),nrRaw:last.nr,bez:last.bez||first.bez,machine:String(last.machine||first.machine||'–'),
+      bereich:first.bereich||last.bereich,pk:first.prio==='PK',versuche:c.length,rueck:rueckItems.length,
+      gruende:rueckItems.map(x=>x.rueck).filter(Boolean),frei,ftr:frei&&rueckItems.length===0,
+      start:first.ts_angek||first.ts_qs,ende:frei?last.ts_abg:null,
+      datum:new Date((frei?last.ts_abg:null)||last.ts_abg||first.ts_angek||Date.now())};
+  });
+}
+function qClass(q,n){if(q===null||n===0)return'q-na';return q>=80?'q-good':q>=50?'q-warn':'q-bad';}
+function agg(vs){
+  const ab=vs.filter(v=>v.frei);const ftr=ab.filter(v=>v.ftr).length;
+  return{n:vs.length,ab:ab.length,ftr,quote:ab.length?Math.round(ftr/ab.length*100):null,
+    rueck:vs.reduce((a,v)=>a+v.rueck,0),offen:vs.filter(v=>!v.frei).length,
+    avgV:ab.length?(ab.reduce((a,v)=>a+v.versuche,0)/ab.length):null};
+}
+function meter(q,n){
+  const cls=qClass(q,n);
+  return `<div class="meter"><span class="meter-v" style="color:${q===null?'var(--text3)':'var(--text)'}">${q===null?'–':q+' %'}</span><div class="meter-track"><div class="meter-fill ${cls}" style="width:${q===null?0:Math.max(q,2)}%;${n>0&&n<3?'opacity:.4':''}" title="${n} abgeschlossene Vorgänge"></div></div></div>`;
+}
+function awFiltered(){
+  const cutoff=awZeit?Date.now()-awZeit*86400000:0;
+  return buildVorgaenge(awParts).filter(v=>!v.pk&&v.datum.getTime()>=cutoff);
+}
+function renderAuswertung(){
+  const all=awFiltered();
+  const vs=all.filter(v=>awBereich==='alle'||v.bereich===awBereich);
+  const g=agg(vs),dreh=agg(all.filter(v=>v.bereich==='Drehen')),fraes=agg(all.filter(v=>v.bereich==='Fräsen'));
+  document.getElementById('aw-stand').textContent=`${awParts.length} Einträge · Stand ${fmtTime(awLoadedAt.toISOString())}`;
+  const tile=(lbl,a,col,isHero,onclick)=>`<div class="aw-tile ${isHero?'hero':''}" style="${isHero?`border-color:${col}`:''};${onclick?'cursor:pointer':''}" ${onclick?`onclick="${onclick}"`:''}>
+      <div class="aw-lbl">${col&&!isHero?`<span class="aw-dot" style="background:${col}"></span>`:''}${lbl}</div>
+      <div class="aw-val">${a.quote===null?'–':a.quote+'<span style="font-size:20px"> %</span>'}</div>
+      <div class="aw-sub">${a.ftr} von ${a.ab} Vorgängen beim 1. Versuch i.O.</div>
+      <div class="meter-track" style="width:100%;margin-top:10px"><div class="meter-fill ${qClass(a.quote,a.ab)}" style="width:${a.quote===null?0:Math.max(a.quote,2)}%"></div></div>
+    </div>`;
+  const kpi=(lbl,val,sub)=>`<div class="aw-tile"><div class="aw-lbl">${lbl}</div><div class="aw-val" style="font-size:28px">${val}</div><div class="aw-sub">${sub}</div></div>`;
+
+  // Trend: FTR pro Woche (≤90 Tage) bzw. pro Monat
+  const byMonth=!awZeit||awZeit>90;
+  const bucketKey=d=>{if(byMonth)return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;const t=new Date(d);t.setHours(0,0,0,0);t.setDate(t.getDate()-((t.getDay()+6)%7));return t.toISOString().slice(0,10);};
+  const bucketLbl=k=>{if(byMonth){const[y,m]=k.split('-');return['Jän','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][+m-1]+' '+y.slice(2);}const d=new Date(k);const wk=isoWeek(d);return'KW'+wk;};
+  const buckets={};vs.filter(v=>v.frei).forEach(v=>{const k=bucketKey(v.datum);(buckets[k]=buckets[k]||[]).push(v);});
+  const keys=Object.keys(buckets).sort().slice(-16);
+  const trend=keys.length?`<div class="trend">${keys.map(k=>{const a=agg(buckets[k]);return`<div class="trend-col" data-tip="<b>${bucketLbl(k)}</b><br>FTR ${a.quote} %<br>${a.ftr} von ${a.ab} beim 1. Versuch i.O.<br>${a.rueck} Rückweisung(en)"><span class="trend-v">${a.quote} %</span><div class="trend-bar" style="height:${Math.max(a.quote,2)}%"></div></div>`;}).join('')}</div>
+    <div class="trend-x">${keys.map(k=>`<span>${bucketLbl(k)}</span>`).join('')}</div>`:'<div class="aw-note">Noch keine abgeschlossenen Vorgänge im Zeitraum.</div>';
+
+  // Maschinen
+  const mm={};vs.forEach(v=>{(mm[v.machine]=mm[v.machine]||{m:v.machine,b:v.bereich,list:[]}).list.push(v);});
+  let mRows=Object.values(mm).map(x=>({...x,...agg(x.list)}));
+  mRows=sortRows(mRows,awSort.m);
+  // Teile
+  const tv=vs.filter(v=>!awMaschine||v.machine===awMaschine);
+  const tm={};tv.forEach(v=>{const t=(tm[v.nr]=tm[v.nr]||{nr:v.nr,bez:v.bez,mach:new Set(),list:[],gruende:[]});t.list.push(v);t.mach.add(v.machine);t.gruende.push(...v.gruende);});
+  let tRows=Object.values(tm).map(x=>({...x,...agg(x.list)})).filter(t=>!awTeilSuche||t.nr.includes(awTeilSuche)||(t.bez||'').toUpperCase().includes(awTeilSuche));
+  tRows=sortRows(tRows,awSort.t);
+  const th=(tbl,key,lbl,num)=>{const[sk,sd]=awSort[tbl];return`<th class="${num?'num':''}" onclick="awSetSort('${tbl}','${key}')">${lbl}${sk===key?(sd>0?' ▲':' ▼'):''}</th>`;};
+
+  document.getElementById('aw-content').innerHTML=`
+    <div class="aw-grid">
+      ${tile(awBereich==='alle'?'FTR gesamt':'FTR '+awBereich,g,'var(--accent)',true)}
+      ${tile('Drehen',dreh,'#5555bb',false,"awSetBereich('Drehen')")}
+      ${tile('Fräsen',fraes,'#338833',false,"awSetBereich('Fräsen')")}
+      ${kpi('Ø Versuche bis Freigabe',g.avgV===null?'–':g.avgV.toFixed(2).replace('.',','),`über ${g.ab} freigegebene Vorgänge`)}
+      ${kpi('Rückweisungen',g.rueck,g.offen?`${g.offen} ${g.offen===1?'Vorgang':'Vorgänge'} noch nicht freigegeben`:'alle Vorgänge freigegeben')}
+    </div>
+    <div class="aw-card">
+      <div class="aw-card-h"><span class="aw-card-t">FTR-Verlauf ${awBereich==='alle'?'':'· '+awBereich}</span><span class="aw-card-s">pro ${byMonth?'Monat':'Kalenderwoche'} · Anteil der Vorgänge, die beim 1. Versuch freigegeben wurden</span></div>
+      ${trend}
+    </div>
+    <div class="aw-cols">
+      <div class="aw-card">
+        <div class="aw-card-h"><span class="aw-card-t">Maschinen</span><span class="aw-card-s">Klick auf eine Maschine filtert die Teile</span>
+          ${awMaschine?`<button class="btn btn-sm" style="margin-left:auto" onclick="awSetMaschine(null)">Filter ${awMaschine} ✕</button>`:''}</div>
+        <div class="aw-scroll"><table class="aw-table"><thead><tr>${th('m','m','Maschine')}${th('m','b','Bereich')}${th('m','ab','Vorgänge',1)}${th('m','ftr','FTR',1)}${th('m','avgV','Ø Vers.',1)}${th('m','rueck','Rückw.',1)}</tr></thead>
+        <tbody>${mRows.map(r=>`<tr class="${awMaschine===r.m?'sel':''}" style="cursor:pointer" onclick="awSetMaschine('${String(r.m).replace(/'/g,'')}')">
+          <td class="mono" style="font-weight:600">${r.m}</td><td><span class="bereich-badge ${bCss(r.b)}">${r.b||'–'}</span></td>
+          <td class="num mono">${r.ab}${r.offen?` <span class="chip-sm">+${r.offen} offen</span>`:''}</td><td class="num">${meter(r.quote,r.ab)}</td>
+          <td class="num mono">${r.avgV===null?'–':r.avgV.toFixed(1).replace('.',',')}</td><td class="num mono" style="color:${r.rueck?'var(--p1)':'var(--text3)'};font-weight:600">${r.rueck}</td></tr>`).join('')||'<tr><td colspan="6" class="aw-note">Keine Daten</td></tr>'}</tbody></table></div>
+      </div>
+      <div class="aw-card">
+        <div class="aw-card-h"><span class="aw-card-t">Teile${awMaschine?' · Maschine '+awMaschine:''}</span>
+          <input placeholder="Artikel suchen…" value="${awTeilSuche}" oninput="awSucheTeil(this.value)" style="margin-left:auto;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:var(--font);width:160px;outline:none" id="aw-teil-suche"></div>
+        <div class="aw-scroll"><table class="aw-table"><thead><tr>${th('t','nr','Artikel')}${th('t','ab','Vorg.',1)}${th('t','ftr','FTR',1)}${th('t','avgV','Ø Vers.',1)}${th('t','rueck','Rückw.',1)}<th>Letzte Gründe</th></tr></thead>
+        <tbody>${tRows.map(r=>`<tr>
+          <td><div class="mono" style="font-weight:600">${r.nr}</div><div style="font-size:11px;color:var(--text3)">${r.bez||''} · ${[...r.mach].join(', ')}</div></td>
+          <td class="num mono">${r.ab}${r.offen?` <span class="chip-sm">+${r.offen}</span>`:''}</td><td class="num">${meter(r.quote,r.ab)}</td>
+          <td class="num mono">${r.avgV===null?'–':r.avgV.toFixed(1).replace('.',',')}</td>
+          <td class="num mono" style="color:${r.rueck?'var(--p1)':'var(--text3)'};font-weight:600">${r.rueck}</td>
+          <td style="font-size:12px;color:var(--text2);max-width:220px">${r.gruende.slice(-2).join(' · ')||'–'}</td></tr>`).join('')||'<tr><td colspan="6" class="aw-note">Keine Daten</td></tr>'}</tbody></table></div>
+      </div>
+    </div>
+    <div class="aw-note">FTR = Anteil der freigegebenen Vorgänge ohne Rückweisung. Ein Vorgang = alle Versuche eines Erstteils bis zur Freigabe. Prozesskontrollen (PK) sind ausgeschlossen. Artikel mit/ohne B werden zusammengefasst. Bei wenigen Vorgängen (n &lt; 3) ist die Quote nur eingeschränkt aussagekräftig.</div>`;
+  // Tooltips für den Verlauf
+  document.querySelectorAll('#aw-content .trend-col').forEach(el=>{
+    el.onmousemove=e=>{const t=document.getElementById('aw-tip');t.innerHTML=el.dataset.tip;t.style.display='block';t.style.left=Math.min(e.clientX+14,window.innerWidth-200)+'px';t.style.top=(e.clientY-10)+'px';};
+    el.onmouseleave=()=>{document.getElementById('aw-tip').style.display='none';};
+  });
+}
+function awSucheTeil(v){awTeilSuche=v.trim().toUpperCase();renderAuswertung();const i=document.getElementById('aw-teil-suche');if(i){i.focus();i.setSelectionRange(i.value.length,i.value.length);}}
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/86400000+1)/7);}
+function sortRows(rows,[k,d]){
+  const val=r=>k==='ftr'?(r.quote===null?999:r.quote):r[k]===null||r[k]===undefined?-1:r[k];
+  return rows.sort((a,b)=>{const va=val(a),vb=val(b);if(typeof va==='string')return d*va.localeCompare(vb,'de',{numeric:true});return d*(va-vb)||(b.ab-a.ab);});
+}
+function awSetSort(tbl,key){const[k,d]=awSort[tbl];awSort[tbl]=[key,k===key?-d:(key==='ftr'||key==='m'||key==='nr'||key==='b'?1:-1)];renderAuswertung();}
+function awSetMaschine(m){awMaschine=awMaschine===m?null:m;renderAuswertung();}
+function awSetBereich(b){awBereich=b;document.querySelectorAll('#aw-bereich .seg-btn').forEach(x=>x.classList.toggle('active',x.dataset.v===b));awMaschine=null;renderAuswertung();}
+document.addEventListener('click',e=>{
+  const z=e.target.closest('#aw-zeit .seg-btn');
+  if(z){awZeit=+z.dataset.v;document.querySelectorAll('#aw-zeit .seg-btn').forEach(x=>x.classList.toggle('active',x===z));renderAuswertung();}
+  const b=e.target.closest('#aw-bereich .seg-btn');
+  if(b)awSetBereich(b.dataset.v);
+});
+function exportVorgaengeCSV(){
+  if(!awParts)return;
+  const vs=awFiltered().filter(v=>awBereich==='alle'||v.bereich===awBereich);
+  const esc=x=>`"${String(x??'').replace(/"/g,'""')}"`;
+  const rows=[['Artikel','Bezeichnung','Maschine','Bereich','Start','Freigegeben am','Versuche','Rückweisungen','FTR','Status','Gründe'].join(';')];
+  vs.forEach(v=>rows.push([v.nr,v.bez,v.machine,v.bereich,v.start?fmtDT(v.start):'',v.ende?fmtDT(v.ende):'',v.versuche,v.rueck,v.frei?(v.ftr?'ja':'nein'):'',v.frei?'freigegeben':'offen',v.gruende.join(' | ')].map(esc).join(';')));
+  const blob=new Blob(['﻿'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`ET_FTR_Vorgaenge_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+// ── END AUSWERTUNG ────────────────────────────────────────────────────────
 
 // ── CMM MONITORING ────────────────────────────────────────────────────────
 function calcQSPartsAtTime(startIso, endIso){
