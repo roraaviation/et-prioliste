@@ -1685,20 +1685,6 @@ function renderAuswertung(){
       <div class="aw-card-h"><span class="aw-card-t">FTR-Verlauf ${awBereich==='alle'?'':'· '+awBereich}</span><span class="aw-card-s">pro ${byMonth?'Monat':'Kalenderwoche'} · Anteil der Vorgänge, die beim 1. Versuch freigegeben wurden</span></div>
       ${trend}
     </div>
-    ${(()=>{const top=[...tRows].filter(r=>r.rueck>0).sort((a,b)=>b.rueck-a.rueck||(a.quote??999)-(b.quote??999)).slice(0,3);
-      if(!top.length)return'';
-      return `<div class="aw-card"><div class="aw-card-h"><span class="aw-card-t">🔍 Problemteile</span><span class="aw-card-s">meiste Rückweisungen${awMaschine?' · '+selLabel:''} · Klick öffnet die Detailanalyse</span></div>
-        <div class="aw-grid" style="padding:14px 18px;margin:0">${top.map((r,i)=>{const pc=posCounts(r.gruende);const tp=pc[0];
-          return `<div class="aw-tile prob-tile" onclick="awOpenTeil('${r.nr}')" style="cursor:pointer;${i===0?'border:2px solid var(--p1)':''}">
-            <div class="aw-lbl">#${i+1} · ${[...r.grp].join(', ')}</div>
-            <div style="font-size:20px;font-weight:700;margin-top:6px">${r.nr} <span style="font-size:13px;font-weight:400;color:var(--text2)">${r.bez||''}</span></div>
-            <div style="display:flex;gap:18px;margin-top:10px;font-size:13px;color:var(--text2)">
-              <span><b style="color:var(--p1);font-size:18px">${r.rueck}</b> Rückw.</span>
-              <span><b style="font-size:18px;color:var(--text)">${r.quote===null?'–':r.quote+' %'}</b> FTR</span>
-              <span><b style="font-size:18px;color:var(--text)">${r.avgV===null?'–':r.avgV.toFixed(1).replace('.',',')}</b> Ø Vers.</span></div>
-            ${tp?`<div class="aw-sub" style="margin-top:10px">Häufigster Grund: <b style="color:var(--text)">${tp.pos}</b> ${tp.text?'('+tp.text+')':''} – ${tp.n}×</div>`:''}
-            <div style="margin-top:10px;font-size:12px;color:var(--accent);font-weight:600">Unter die Lupe nehmen →</div>
-          </div>`;}).join('')}</div></div>`;})()}
     <div class="aw-cols">
       <div class="aw-card">
         <div class="aw-card-h"><span class="aw-card-t">Fertigungsgruppen &amp; Maschinen</span><span class="aw-card-s">Klick filtert die Teile</span>
