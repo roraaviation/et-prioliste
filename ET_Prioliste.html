@@ -288,7 +288,7 @@ tr.row-rueck{background:#fff8f8}
 <div id="auth-overlay"><div class="login-box"><div class="login-title">ET Prioliste</div><div class="login-sub">Bitte mit RO-RA Account anmelden</div><button class="btn btn-primary" onclick="login()" style="padding:11px 32px;font-size:15px;margin-top:4px">Anmelden</button></div></div>
 <div class="header">
 
-  <span class="header-title">ET Prioliste</span><span id="app-ver" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:4px">v2026.10.09-g</span>
+  <span class="header-title">ET Prioliste</span><span id="app-ver" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:4px">v2026.10.09-h</span>
   <span class="header-sep"></span>
   <span class="header-user" id="user-name"></span>
   <span id="rolle-badge" style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:var(--p3lt);color:var(--p3);font-family:var(--mono)">Fertigung</span><div class="header-dot" id="conn-dot"></div>
@@ -1245,14 +1245,14 @@ function renderDashboard(){
 
   // CMM status for dashboard
   const cmmCards=cmmStatus.length>0?cmmStatus.map(m=>{
-    const spStatus=(m.status||'').toLowerCase();
-    const isDown=spStatus==='gestoppt';
+    const cs=cmmState(m,0);
+    const isDown=cs.zustand!=='laeuft';
     const col=isDown?'var(--p1)':'var(--p3)';
     const bg=isDown?'var(--p1lt)':'var(--p3lt)';
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:${bg};border-radius:6px;border:1px solid ${col}">
       <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></div>
       <span style="font-size:13px;font-weight:600;font-family:var(--mono)">${m.maschine}</span>
-      <span style="font-size:12px;color:${col};margin-left:4px">${isDown?'Gestoppt':'Läuft'}</span>
+      <span style="font-size:12px;color:${col};margin-left:4px">${cs.zustand==='laeuft'?'Läuft':cs.zustand==='steht'?'Steht':'Unbekannt'}</span>
     </div>`;
   }).join(''):'';
 
@@ -2014,7 +2014,21 @@ function calcQSPartsAtTime(startIso, endIso){
   }).length;
 }
 
-let _cmmLoadedOnce=false,_cmmCleanupRunning=false;
+let _cmmLoadedOnce=false,_cmmCleanupRunning=false,_cmmAktField=undefined;
+async function cmmStatusFetch(){
+  if(_cmmAktField===undefined){
+    _cmmAktField=null;
+    try{
+      const f=await spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STATUS_LIST)}')/fields?$select=Title,InternalName,Hidden&$top=500`);
+      const n=x=>String(x||'').toLowerCase().replace(/_x00e4_/g,'a').replace(/ä/g,'a').replace(/_x0020_/g,'').replace(/[\s_\-]/g,'');
+      const hit=f.d.results.filter(x=>!x.Hidden).find(x=>['letzteaktivitat','letzteaktivitaet'].includes(n(x.Title))||['letzteaktivitat','letzteaktivitaet'].includes(n(x.InternalName)));
+      _cmmAktField=hit?hit.InternalName:null;
+      if(!hit)console.warn('CMM-Status: Spalte "LetzteAktivitaet" nicht gefunden – "Letzte Quartis-Aktivität" kann nicht angezeigt werden.');
+    }catch(e){console.warn('CMM-Status Spaltenprüfung fehlgeschlagen',e);}
+  }
+  const sel=['ID','Title','LastSignalZeit','CMMStatus'].concat(_cmmAktField?[_cmmAktField]:[]).join(',');
+  return spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STATUS_LIST)}')/items?$select=${sel}&$top=50`);
+}
 async function loadMonitoringData(silent){
   if(userRolle!=='Admin')return;
   // Beim ersten Mal Ladeanzeige, danach sofort die letzten Daten zeigen und still aktualisieren
@@ -2029,10 +2043,10 @@ async function loadMonitoringData(silent){
   let old=[];
   try{
     const [st,sl]=await Promise.all([
-      spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STATUS_LIST)}')/items?$select=ID,Title,LastSignalZeit,CMMStatus&$top=50`),
+      cmmStatusFetch(),
       spFetch(`${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(CMM_STILLSTAND_LIST)}')/items?$select=ID,Title,StartZeit,EndZeit,DauerMinuten&$top=200&$orderby=StartZeit%20desc`)
     ]);
-    cmmStatus=st.d.results.map(r=>({id:r.ID,maschine:r.Title,lastSignal:r.LastSignalZeit,status:r.CMMStatus,letzteAktivitaet:r.LetzteAktivitaet||null}));
+    cmmStatus=st.d.results.map(r=>({id:r.ID,maschine:r.Title,lastSignal:r.LastSignalZeit,status:r.CMMStatus,letzteAktivitaet:(_cmmAktField&&r[_cmmAktField])||null}));
     cmmStillstand=sl.d.results.map(r=>({id:r.ID,maschine:r.Title,startZeit:r.StartZeit,endZeit:r.EndZeit,dauerMin:r.DauerMinuten}));
     cmmStillstand.sort((a,b)=>new Date(b.startZeit||0)-new Date(a.startZeit||0));
     const cutoff=new Date(Date.now()-30*24*60*60*1000).toISOString();
@@ -2063,64 +2077,61 @@ async function loadMonitoringData(silent){
   }
 }
 
+// Zustand einer CMM aus dem Heartbeat des PC-Skripts (alle 60 s):
+//  Online/Offline = meldet sich das Skript (Signal < 5 min)?
+//  Läuft/Steht    = hat Quartis in den letzten 20 min etwas geschrieben? (entscheidet das Skript)
+//  Unbekannt      = offline, letzter bekannter Zustand ist nicht mehr verlässlich
+function spTime(x){if(!x)return null;const t=new Date(/Z$|[+-]\d\d:\d\d$/.test(x)?x:x+'Z').getTime();return isNaN(t)?null:t;}
+function minStr(m){return m<60?m+' min':Math.floor(m/60)+' h '+(m%60)+' min';}
+function cmmState(m,qsNow){
+  const now=Date.now();
+  const sig=spTime(m.lastSignal),akt=spTime(m.letzteAktivitaet);
+  const sigMin=sig===null?null:Math.max(0,Math.floor((now-sig)/60000));
+  const aktMin=akt===null?null:Math.max(0,Math.floor((now-akt)/60000));
+  const online=sigMin!==null&&sigMin<5;
+  const gestoppt=(m.status||'').toLowerCase()==='gestoppt';
+  const zustand=!online?'unbekannt':gestoppt?'steht':'laeuft';
+  // Alarm: Teile warten in QS und die Maschine steht, oder der PC meldet sich seit 15 min nicht
+  const alarm=qsNow>0&&(zustand==='steht'||(!online&&(sigMin===null||sigMin>=15)));
+  return{online,zustand,alarm,sigMin,aktMin,aktIso:akt!==null?new Date(akt).toISOString():null};
+}
 function renderMonitoring(){
   const cont=document.getElementById('monitoring-content');
   if(!cont||cont.style.display==='none')return;
   const now=Date.now();
   const qsNow=allParts.filter(p=>p.status==='Bauteil in QS').length;
 
-  // Machine status cards
+  // Maschinenkarten
   const machineCards=cmmStatus.length===0
     ?'<div style="color:var(--text3);font-size:13px;padding:12px 0">Keine Maschinendaten – SharePoint-Liste "CMM-Status" prüfen.</div>'
     :cmmStatus.map(m=>{
-      const lastMs=m.lastSignal?new Date(m.lastSignal.endsWith('Z')?m.lastSignal:m.lastSignal+'Z').getTime():0;
-      const minAgo=Math.floor((now-lastMs)/60000);
-      const spStatus=(m.status||'').toLowerCase();
-      const isOffline=minAgo>=5;
-      const isDown=spStatus==='gestoppt'||isOffline;
-      const isAlert=isDown&&minAgo>=15&&qsNow>0;
-
-      // Verbindungsstatus
-      const connCol=isOffline?'#888':'var(--p3)';
-      const connBg=isOffline?'var(--bg3)':'var(--p3lt)';
-      const connLabel=isOffline?'Offline':'Online';
-
-      // Maschinenstatus
-      const machCol=isAlert?'var(--p1)':isDown?'#e08800':'var(--p3)';
-      const machBg=isAlert?'var(--p1lt)':isDown?'#fff8e6':'var(--p3lt)';
-      const machLabel=isDown?'Gestoppt':'Läuft';
-
-      // Letzte Bewegung
-      const letzteAkt=m.letzteAktivitaet||m.lastSignal;
-      const letzteAktMs=letzteAkt?new Date(letzteAkt.endsWith('Z')?letzteAkt:letzteAkt+'Z').getTime():0;
-      const bewegungMinAgo=letzteAktMs?Math.floor((now-letzteAktMs)/60000):null;
-      const bewegungStr=bewegungMinAgo!==null?(bewegungMinAgo<60?bewegungMinAgo+' min':Math.floor(bewegungMinAgo/60)+'h '+bewegungMinAgo%60+'m'):null;
-
-      return `<div style="background:#fff;border:2px solid ${isAlert?'var(--p1)':isDown?'#e08800':'var(--p3)'};border-radius:10px;padding:16px 20px;min-width:250px;box-shadow:var(--shadow);flex:1;max-width:320px">
+      const c=cmmState(m,qsNow);
+      const conn=c.online?['Online','var(--p3)','var(--p3lt)']:['Offline','#888','var(--bg3)'];
+      const st=c.zustand==='laeuft'?['Läuft','var(--p3)','var(--p3lt)']:c.zustand==='steht'?['Steht',c.alarm?'var(--p1)':'#e08800',c.alarm?'var(--p1lt)':'#fff8e6']:['Unbekannt','#888','var(--bg3)'];
+      const rahmen=c.alarm?'var(--p1)':c.zustand==='laeuft'?'var(--p3)':c.zustand==='steht'?'#e08800':'var(--border2)';
+      return `<div style="background:#fff;border:2px solid ${rahmen};border-radius:10px;padding:16px 20px;min-width:250px;box-shadow:var(--shadow);flex:1;max-width:340px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-          <span style="font-weight:700;font-family:var(--mono);font-size:16px">${m.maschine}</span>
+          <span style="font-weight:700;font-family:var(--mono);font-size:16px">${h(m.maschine)}</span>
           <span style="margin-left:auto;display:flex;gap:6px">
-            <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:12px;background:${connBg};color:${connCol}">${connLabel}</span>
-            <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:12px;background:${machBg};color:${machCol}">${machLabel}</span>
+            <span title="Meldet sich das Überwachungs-Skript am CMM-PC?" style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:12px;background:${conn[2]};color:${conn[1]}">${conn[0]}</span>
+            <span title="Quartis-Aktivität der letzten 20 Minuten" style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:12px;background:${st[2]};color:${st[1]}">${st[0]}</span>
           </span>
         </div>
-        <div style="font-size:13px;color:var(--text2)">Letzte Bewegung:</div>
-        <div style="font-size:15px;font-weight:600;font-family:var(--mono);color:var(--text);margin-top:2px">${letzteAkt?fmtDT(letzteAkt):'–'}</div>
-        ${bewegungStr?`<div style="font-size:12px;color:var(--text3);margin-top:2px">vor ${bewegungStr}</div>`:''}
-        ${isAlert?`<div style="margin-top:10px;padding:7px 11px;background:var(--p1lt);border-radius:6px;font-size:12px;color:var(--p1);font-weight:600">⚠ ${qsNow} Bauteil${qsNow>1?'e warten':'wartet'} in QS!</div>`:''}
+        <div style="font-size:13px;color:var(--text2)">Letzte Quartis-Aktivität:</div>
+        <div style="font-size:15px;font-weight:600;font-family:var(--mono);color:var(--text);margin-top:2px">${c.aktIso?fmtDT(c.aktIso):'–'}</div>
+        ${c.aktMin!==null?`<div style="font-size:12px;color:var(--text3);margin-top:2px">vor ${minStr(c.aktMin)}</div>`:''}
+        <div style="font-size:11px;color:var(--text3);margin-top:8px">Letztes Signal vom PC: ${c.sigMin===null?'nie':'vor '+minStr(c.sigMin)}</div>
+        ${c.alarm?`<div style="margin-top:10px;padding:7px 11px;background:var(--p1lt);border-radius:6px;font-size:12px;color:var(--p1);font-weight:600">⚠ ${qsNow} Bauteil${qsNow>1?'e warten':' wartet'} in QS${c.online?'':' – kein Signal vom CMM-PC'}!</div>`:''}
       </div>`;
     }).join('');
 
-  // Global alert banner
-  const machineAlert=cmmStatus.some(m=>{
-    const min=m.lastSignal?Math.floor((now-new Date(m.lastSignal).getTime())/60000):999;
-    return min>=15;
-  })&&qsNow>0;
-  const alertBanner=machineAlert?`<div style="background:var(--p1lt);border:2px solid var(--p1);border-radius:var(--radius);padding:14px 20px;margin-bottom:18px;display:flex;align-items:center;gap:14px">
+  // Banner, wenn eine Maschine steht (oder kein Signal hat) und Teile warten
+  const alarme=cmmStatus.map(m=>({m,c:cmmState(m,qsNow)})).filter(x=>x.c.alarm);
+  const alertBanner=alarme.length?`<div style="background:var(--p1lt);border:2px solid var(--p1);border-radius:var(--radius);padding:14px 20px;margin-bottom:18px;display:flex;align-items:center;gap:14px">
     <span style="font-size:24px;flex-shrink:0">⚠</span>
     <div>
-      <div style="font-weight:700;color:var(--p1);font-size:15px">Maschine steht – Teile warten!</div>
-      <div style="font-size:13px;color:var(--p1);margin-top:3px">${qsNow} Bauteil${qsNow>1?'e sind':'ist'} in der QS-Queue, aber die CMM läuft nicht. Bitte nachsehen!</div>
+      <div style="font-weight:700;color:var(--p1);font-size:15px">${alarme.map(x=>h(x.m.maschine)+(x.c.online?' steht':' ohne Signal')).join(' · ')} – Teile warten!</div>
+      <div style="font-size:13px;color:var(--p1);margin-top:3px">${qsNow} Bauteil${qsNow>1?'e sind':' ist'} in der QS-Queue. Bitte nachsehen!</div>
     </div>
   </div>`:'';
 
@@ -2158,6 +2169,7 @@ function renderMonitoring(){
     </div>`:''}
   `;
 
+  checkCMMAlertBadge();
   // Update badge
   const badge=document.getElementById('badge-monitoring');
   if(badge)badge.textContent=totalUnnötig>0?'⚠ '+totalUnnötig:totalDown+'';
@@ -2165,15 +2177,10 @@ function renderMonitoring(){
 
 function checkCMMAlertBadge(){
   if(userRolle!=='Admin')return;
-  const now=Date.now();
   const qsNow=allParts.filter(p=>p.status==='Bauteil in QS').length;
-  const alert=cmmStatus.some(m=>{
-    const min=m.lastSignal?Math.floor((now-new Date(m.lastSignal).getTime())/60000):0;
-    return min>=15&&qsNow>0;
-  });
+  const alert=cmmStatus.some(m=>cmmState(m,qsNow).alarm);
   const tab=document.getElementById('tab-monitoring');
-  if(tab&&alert)tab.style.color='var(--p1)';
-  else if(tab)tab.style.color='';
+  if(tab)tab.style.color=alert?'var(--p1)':'';
 }
 // ── END CMM MONITORING ─────────────────────────────────────────────────────
 
