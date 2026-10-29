@@ -290,7 +290,7 @@ tr.row-rueck{background:#fff8f8}
 <div id="auth-overlay"><div class="login-box"><div class="login-title">ET Prioliste</div><div class="login-sub">Bitte mit RO-RA Account anmelden</div><button class="btn btn-primary" onclick="login()" style="padding:11px 32px;font-size:15px;margin-top:4px">Anmelden</button></div></div>
 <div class="header">
 
-  <span class="header-title">ET Prioliste</span><span id="app-ver" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:4px">v2.5</span>
+  <span class="header-title">ET Prioliste</span><span id="app-ver" style="font-size:11px;color:var(--text3);font-family:var(--mono);margin-left:4px">v2.6</span>
   <span class="header-sep"></span>
   <span class="header-user" id="user-name"></span>
   <span id="rolle-badge" style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:var(--p3lt);color:var(--p3);font-family:var(--mono)">Fertigung</span><div class="header-dot" id="conn-dot"></div>
@@ -1727,7 +1727,7 @@ function genDemoParts(){
             status:!done?'Bauteil in QS':ok?'Freigegeben':'Rückgewiesen',notiz:v>1?'⚠ Rückweisung':'',
             rueck:ok||!done?'':(nr===DEMO_PROBLEM.nr?DEMO_PROBLEM.gruende[Math.floor(rnd()*DEMO_PROBLEM.gruende.length)]:DEMO_GRUENDE[Math.floor(rnd()*DEMO_GRUENDE.length)]),reihenfolge:10,geplant:null,
             ts_angek:new Date(start).toISOString(),ts_qs:new Date(t-3600000).toISOString(),ts_haend:null,ts_abg:done?new Date(t).toISOString():null,
-            versuchStored:v,vorgangStored:vg,angelegtVon:'Demo',geaendertVon:'',letzteAenderung:''});
+            versuchStored:v,vorgangStored:vg,angelegtVon:'Demo',geaendertVon:ok?['Müller','Fischer','Bauer','Weber','Huber'][Math.floor(rnd()*5)]:'',letzteAenderung:''});
           if(ok||!done||lastWeekOpen)break;
         }
       }
@@ -1741,7 +1741,7 @@ function genDemoParts(){
       const t=werktag(now-(w*7+rnd()*6)*86400000);if(t>now)continue;
       out.push({id:id++,nr:nr0,bez,machine:mach,bereich:GRUPPE_INFO[grp].bereich,prio:'PK',status:'Freigegeben',notiz:'',rueck:'',reihenfolge:10,geplant:null,
         ts_angek:new Date(t).toISOString(),ts_qs:new Date(t).toISOString(),ts_haend:null,ts_abg:new Date(t+2*3600000).toISOString(),
-        versuchStored:1,vorgangStored:null,angelegtVon:'Demo',geaendertVon:'',letzteAenderung:''});
+        versuchStored:1,vorgangStored:null,angelegtVon:'Demo',geaendertVon:['Müller','Fischer','Bauer'][Math.floor(rnd()*3)],letzteAenderung:''});
     }
   }
   // 20 zusätzliche Einträge auf den EMCOs (Powermill), Schwerpunkt Problemteil
@@ -1756,7 +1756,7 @@ function genDemoParts(){
         status:ok?'Freigegeben':'Rückgewiesen',notiz:v>1?'⚠ Rückweisung':'',
         rueck:ok?'':P.gruende[Math.floor(rnd()*P.gruende.length)],reihenfolge:10,geplant:null,
         ts_angek:new Date(start).toISOString(),ts_qs:new Date(t-3600000).toISOString(),ts_haend:null,ts_abg:new Date(t).toISOString(),
-        versuchStored:v,vorgangStored:vg,angelegtVon:'Demo',geaendertVon:'',letzteAenderung:''});
+        versuchStored:v,vorgangStored:vg,angelegtVon:'Demo',geaendertVon:ok?['Müller','Fischer','Bauer','Weber','Huber'][Math.floor(rnd()*5)]:'',letzteAenderung:''});
       extra++;
       if(ok)break;
     }
@@ -1797,6 +1797,7 @@ function buildVorgaenge(list){
     return{key:first.id,nr:normNr(first.nr),nrRaw:last.nr,bez:last.bez||first.bez,machine:String(last.machine||first.machine||'–'),gruppe:gruppeOf(last.machine||first.machine),
       bereich:first.bereich||last.bereich,pk:first.prio==='PK',versuche:c.length,rueck:rueckItems.length,
       gruende:rueckItems.map(x=>x.rueck).filter(Boolean),frei,ftr:frei&&rueckItems.length===0,
+      vonWem:frei?(last.geaendertVon||''):'',
       start:first.ts_angek||first.ts_qs,ende:frei?last.ts_abg:null,
       datum:new Date((frei?last.ts_abg:null)||last.ts_abg||first.ts_angek||Date.now())};
   });
@@ -1816,16 +1817,31 @@ function awFiltered(){
   const cutoff=awZeit?Date.now()-awZeit*86400000:0;
   return buildVorgaenge(awParts).filter(v=>!v.pk&&v.datum.getTime()>=cutoff);
 }
+function awRawFiltered(){
+  const cutoff=awZeit?Date.now()-awZeit*86400000:0;
+  return awParts.filter(p=>{
+    const d=new Date(p.ts_abg||p.ts_qs||p.ts_angek||Date.now());
+    return d.getTime()>=cutoff;
+  });
+}
 function renderAuswertung(){
   const all=awFiltered();
+  const rawAll=awRawFiltered();
   const vs=all.filter(v=>awBereich==='alle'||v.bereich===awBereich);
+  const rawVs=rawAll.filter(p=>awBereich==='alle'||p.bereich===awBereich);
   const g=agg(vs),dreh=agg(all.filter(v=>v.bereich==='Drehen')),fraes=agg(all.filter(v=>v.bereich==='Fräsen'));
+  const rawDreh=rawAll.filter(p=>p.bereich==='Drehen').length;
+  const rawFraes=rawAll.filter(p=>p.bereich==='Fräsen').length;
+  const rawFrei=rawVs.filter(p=>p.status==='Freigegeben').length;
+  const rawPk=rawVs.filter(p=>p.prio==='PK').length;
+  // Raw counts per Gruppe/Maschine and per Artikel
+  const rawGm={};rawVs.forEach(p=>{const grp=gruppeOf(p.machine);const G=(rawGm[grp]=rawGm[grp]||{pools:{}});G.n=(G.n||0)+1;const M=(G.pools[String(p.machine)]=G.pools[String(p.machine)]||{});M.n=(M.n||0)+1;});
+  const rawTm={};rawVs.forEach(p=>{const nr=normNr(p.nr);(rawTm[nr]=rawTm[nr]||{n:0}).n++;});
   document.getElementById('aw-stand').textContent=`${awParts.length} Einträge · Stand ${fmtTime(awLoadedAt.toISOString())}`;
-  const tile=(lbl,a,col,isHero,onclick)=>`<div class="aw-tile ${isHero?'hero':''}" style="${isHero?`border-color:${col}`:''};${onclick?'cursor:pointer':''}" ${onclick?`onclick="${onclick}"`:''}>
-      <div class="aw-lbl">${col&&!isHero?`<span class="aw-dot" style="background:${col}"></span>`:''}${lbl}</div>
-      <div class="aw-val">${a.quote===null?'–':a.quote+'<span style="font-size:20px"> %</span>'}</div>
-      <div class="aw-sub">${a.ftr} von ${a.ab} Vorgängen beim 1. Versuch i.O.</div>
-      <div class="meter-track" style="width:100%;margin-top:10px"><div class="meter-fill ${qClass(a.quote,a.ab)}" style="width:${a.quote===null?0:Math.max(a.quote,2)}%"></div></div>
+  const tileB=(lbl,rawN,ftrA,col,onclick)=>`<div class="aw-tile" style="cursor:pointer" onclick="${onclick}">
+      <div class="aw-lbl"><span class="aw-dot" style="background:${col}"></span>${lbl}</div>
+      <div class="aw-val">${rawN}<span style="font-size:20px"> Teile</span></div>
+      <div class="aw-sub">FTR ${ftrA.quote===null?'–':ftrA.quote+' %'} · ${ftrA.ftr}/${ftrA.ab} Erstteile</div>
     </div>`;
   const kpi=(lbl,val,sub)=>`<div class="aw-tile"><div class="aw-lbl">${lbl}</div><div class="aw-val" style="font-size:28px">${val}</div><div class="aw-sub">${sub}</div></div>`;
 
@@ -1840,24 +1856,29 @@ function renderAuswertung(){
 
   // Fertigungsgruppen -> Maschinen
   const gm={};vs.forEach(v=>{const G=(gm[v.gruppe]=gm[v.gruppe]||{m:gruppeLabel(v.gruppe),g:v.gruppe,b:GRUPPE_INFO[v.gruppe]?.bereich||v.bereich,list:[],pools:{}});G.list.push(v);(G.pools[v.machine]=G.pools[v.machine]||{m:v.machine,list:[]}).list.push(v);});
-  let gRows=sortRows(Object.values(gm).map(x=>({...x,...agg(x.list),poolRows:sortRows(Object.values(x.pools).map(p=>({...p,...agg(p.list)})),awSort.m)})),awSort.m);
+  let gRows=sortRows(Object.values(gm).map(x=>({...x,...agg(x.list),teile:rawGm[x.g]?.n||0,poolRows:sortRows(Object.values(x.pools).map(p=>({...p,...agg(p.list),teile:rawGm[x.g]?.pools?.[p.m]?.n||0})),awSort.m)})),awSort.m);
   gRows.sort((a,b)=>(a.g==='Sonstige')-(b.g==='Sonstige'));
   const selIs=k=>awMaschine===k;
   const selLabel=!awMaschine?'':awMaschine.startsWith('G:')?gruppeLabel(awMaschine.slice(2)):'Maschine '+awMaschine;
   // Teile
   const tv=vs.filter(v=>!awMaschine||(awMaschine.startsWith('G:')?v.gruppe===awMaschine.slice(2):v.machine===awMaschine));
   const tm={};tv.forEach(v=>{const t=(tm[v.nr]=tm[v.nr]||{nr:v.nr,bez:v.bez,mach:new Set(),grp:new Set(),list:[],gruende:[]});t.list.push(v);t.mach.add(v.machine);t.grp.add(gruppeLabel(v.gruppe));t.gruende.push(...v.gruende);});
-  let tRows=Object.values(tm).map(x=>({...x,...agg(x.list)})).filter(t=>!awTeilSuche||t.nr.includes(awTeilSuche)||(t.bez||'').toUpperCase().includes(awTeilSuche));
+  let tRows=Object.values(tm).map(x=>({...x,...agg(x.list),teile:rawTm[x.nr]?.n||0})).filter(t=>!awTeilSuche||t.nr.includes(awTeilSuche)||(t.bez||'').toUpperCase().includes(awTeilSuche));
   tRows=sortRows(tRows,awSort.t);
   const th=(tbl,key,lbl,num)=>{const[sk,sd]=awSort[tbl];return`<th class="${num?'num':''}" onclick="awSetSort('${tbl}','${key}')">${lbl}${sk===key?(sd>0?' ▲':' ▼'):''}</th>`;};
 
   document.getElementById('aw-content').innerHTML=`
     ${DEMO?`<div style="background:#fff8e6;border:1px solid #e08800;color:#8a5200;border-radius:var(--radius);padding:10px 16px;margin-bottom:16px;font-size:13px"><strong>DEMO-DATEN</strong> – erfundene Beispielwerte zur Vorschau. Nichts davon steht in SharePoint. Echte Auswertung: Adresse ohne <code>?demo=1</code> öffnen.</div>`:''}
     <div class="aw-grid">
-      ${tile(awBereich==='alle'?'FTR gesamt':'FTR '+awBereich,g,'var(--accent)',true)}
-      ${tile('Drehen',dreh,'#5555bb',false,"awSetBereich('Drehen')")}
-      ${tile('Fräsen',fraes,'#338833',false,"awSetBereich('Fräsen')")}
-      ${kpi('Ø Versuche bis Freigabe',g.avgV===null?'–':g.avgV.toFixed(2).replace('.',','),`über ${g.ab} freigegebene Vorgänge`)}
+      <div class="aw-tile hero" style="border-color:var(--accent)">
+        <div class="aw-lbl">${awBereich==='alle'?'Positionen gesamt':'Positionen · '+awBereich}</div>
+        <div class="aw-val">${rawVs.length}<span style="font-size:20px"> Teile</span></div>
+        <div class="aw-sub">${rawFrei} freigegeben${rawPk?' · '+rawPk+' PK':''}</div>
+        <div style="margin-top:8px;font-size:12px;color:var(--text2)">FTR: <strong>${g.quote===null?'–':g.quote+' %'}</strong><span style="color:var(--text3);font-size:11px;margin-left:5px">${g.ftr} von ${g.ab} Erstteilen beim 1. Versuch i.O.</span></div>
+      </div>
+      ${tileB('Drehen',rawDreh,dreh,'#5555bb',"awSetBereich('Drehen')")}
+      ${tileB('Fräsen',rawFraes,fraes,'#338833',"awSetBereich('Fräsen')")}
+      ${kpi('Ø Versuche bis Freigabe',g.avgV===null?'–':g.avgV.toFixed(2).replace('.',','),`über ${g.ab} freigegebene Erstteile`)}
       ${kpi('Rückweisungen',g.rueck,g.offen?`${g.offen} ${g.offen===1?'Vorgang':'Vorgänge'} noch nicht freigegeben`:'alle Vorgänge freigegeben')}
     </div>
     <div class="aw-card">
@@ -1868,12 +1889,12 @@ function renderAuswertung(){
       <div class="aw-card">
         <div class="aw-card-h"><span class="aw-card-t">Fertigungsgruppen &amp; Maschinen</span><span class="aw-card-s">Klick auf Gruppe klappt Maschinen auf und filtert die Teile</span>
           ${awMaschine?`<button class="btn btn-sm" style="margin-left:auto" onclick="awSetMaschine(null)">Filter: ${selLabel} ✕</button>`:''}</div>
-        <div class="aw-scroll"><table class="aw-table"><thead><tr>${th('m','m','Gruppe / Maschine')}${th('m','ab','Vorgänge',1)}${th('m','ftr','FTR',1)}${th('m','avgV','Ø Vers.',1)}${th('m','rueck','Rückw.',1)}</tr></thead>
+        <div class="aw-scroll"><table class="aw-table"><thead><tr>${th('m','m','Gruppe / Maschine')}${th('m','teile','Teile',1)}${th('m','ftr','FTR',1)}${th('m','avgV','Ø Vers.',1)}${th('m','rueck','Rückw.',1)}</tr></thead>
         <tbody>${gRows.map(G=>{
           const multi=G.poolRows.length>1||G.g==='Sonstige';const open=awOffen.has(G.g);
           const row=(r,key,isG)=>`<tr class="${selIs(key)?'sel':''}" style="cursor:pointer;${isG?'background:var(--bg2)':''}" onclick="${isG?`awToggleGruppe('${G.g}')`:`awSetMaschine('${key.replace(/'/g,'')}')`}">
             <td>${isG?`<span style="display:inline-block;width:14px;color:var(--text3)">${multi?(open?'▾':'▸'):''}</span><span style="font-weight:700">${r.m}</span> <span class="bereich-badge ${bCss(G.b)}" style="margin-left:6px;font-size:11px">${G.b||'–'}</span>`:`<span class="mono" style="padding-left:32px;color:var(--text2)">└ ${r.m}</span>`}</td>
-            <td class="num mono" style="${isG?'font-weight:700':''}">${r.ab}${r.offen?` <span class="chip-sm">+${r.offen} offen</span>`:''}</td><td class="num">${meter(r.quote,r.ab)}</td>
+            <td class="num mono" style="${isG?'font-weight:700':''}">${r.teile}</td><td class="num">${meter(r.quote,r.ab)}</td>
             <td class="num mono">${r.avgV===null?'–':r.avgV.toFixed(1).replace('.',',')}</td><td class="num mono" style="color:${r.rueck?'var(--p1)':'var(--text3)'};font-weight:${isG?700:600}">${r.rueck}</td></tr>`;
           return row(G,'G:'+G.g,true)+(multi&&open?G.poolRows.map(P=>row(P,String(P.m),false)).join(''):'');
         }).join('')||'<tr><td colspan="5" class="aw-note">Keine Daten</td></tr>'}</tbody></table></div>
@@ -1881,16 +1902,16 @@ function renderAuswertung(){
       <div class="aw-card">
         <div class="aw-card-h"><span class="aw-card-t">Teile${awMaschine?' · '+selLabel:''}</span>
           <input placeholder="Artikel suchen…" value="${awTeilSuche}" oninput="awSucheTeil(this.value)" style="margin-left:auto;padding:6px 10px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:var(--font);width:160px;outline:none" id="aw-teil-suche"></div>
-        <div class="aw-scroll"><table class="aw-table"><thead><tr>${th('t','nr','Artikel')}${th('t','ab','Vorg.',1)}${th('t','ftr','FTR',1)}${th('t','avgV','Ø Vers.',1)}${th('t','rueck','Rückw.',1)}<th>Letzte Gründe</th></tr></thead>
+        <div class="aw-scroll"><table class="aw-table"><thead><tr>${th('t','nr','Artikel')}${th('t','teile','Teile',1)}${th('t','ftr','FTR',1)}${th('t','avgV','Ø Vers.',1)}${th('t','rueck','Rückw.',1)}<th>Letzte Gründe</th></tr></thead>
         <tbody>${tRows.map(r=>`<tr style="cursor:pointer" onclick="awOpenTeil('${r.nr}')" title="Detailanalyse öffnen">
           <td><div class="mono" style="font-weight:600">${h(r.nr)}</div><div style="font-size:11px;color:var(--text3)">${h(r.bez)} · ${[...r.mach].join(', ')} (${[...r.grp].join(', ')})</div></td>
-          <td class="num mono">${r.ab}${r.offen?` <span class="chip-sm">+${r.offen}</span>`:''}</td><td class="num">${meter(r.quote,r.ab)}</td>
+          <td class="num mono">${r.teile}</td><td class="num">${meter(r.quote,r.ab)}</td>
           <td class="num mono">${r.avgV===null?'–':r.avgV.toFixed(1).replace('.',',')}</td>
           <td class="num mono" style="color:${r.rueck?'var(--p1)':'var(--text3)'};font-weight:600">${r.rueck}</td>
           <td style="font-size:12px;color:var(--text2);max-width:220px">${r.gruende.slice(-2).map(h).join(' · ')||'–'}</td></tr>`).join('')||'<tr><td colspan="6" class="aw-note">Keine Daten</td></tr>'}</tbody></table></div>
       </div>
     </div>
-    <div class="aw-note">FTR = Anteil der freigegebenen Vorgänge ohne Rückweisung. Ein Vorgang = alle Versuche eines Erstteils bis zur Freigabe. Prozesskontrollen (PK) sind ausgeschlossen. Artikel mit/ohne B werden zusammengefasst. Maschinen werden über die Pool-Nummer einer Fertigungsgruppe zugeordnet. Bei wenigen Vorgängen (n &lt; 3) ist die Quote nur eingeschränkt aussagekräftig.</div>`;
+    <div class="aw-note">Positionen = jede einzelne Messung/Einreichung (inkl. PK, Wiederholungen). FTR = Anteil der Erstteile ohne Rückweisung; ein Vorgang = alle Versuche eines Teils bis zur Freigabe (PK ausgeschlossen). Artikel mit/ohne B werden zusammengefasst. Maschinen werden über die Pool-Nummer einer Fertigungsgruppe zugeordnet. Bei wenigen Vorgängen (n &lt; 3) ist die FTR-Quote nur eingeschränkt aussagekräftig.</div>`;
   if(awLupe)renderLupe();
   // Tooltips für den Verlauf
   document.querySelectorAll('#aw-content .trend-col').forEach(el=>{
@@ -1983,7 +2004,7 @@ function renderLupe(){
     <div style="display:flex;flex-direction:column">${vs.map(v=>{
       const dots=Array.from({length:v.rueck},()=>'<span style="color:var(--p1);font-weight:700">✗</span>').join(' ')+(v.frei?' <span style="color:var(--p3);font-weight:700">✓</span>':' <span class="chip-sm">offen</span>');
       return `<div style="display:grid;grid-template-columns:92px 52px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--border);font-size:13px;align-items:start">
-        <span style="color:var(--text2)">${fmtDT(v.ende||v.start)}</span><span class="mono">${v.machine}</span>
+        <div><span style="color:var(--text2)">${fmtDT(v.ende||v.start)}</span>${v.vonWem?`<div style="font-size:11px;color:var(--text3);margin-top:2px">von ${h(v.vonWem)}</div>`:''}</div><span class="mono">${v.machine}</span>
         <div><div>${dots} <span style="color:var(--text3);font-size:12px">${v.versuche} ${v.versuche===1?'Versuch':'Versuche'}</span></div>
         ${v.gruende.length?`<div style="font-size:12px;color:var(--text2);margin-top:2px">${v.gruende.map(h).join(' · ')}</div>`:''}</div></div>`;}).join('')}</div>`)}
   </div>`;
@@ -2057,7 +2078,7 @@ function awOpenPeriode(k,byMonth,ausMonat){
         <span class="hide-s" style="color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h(p.bez)}</span>
         <span>${h(p.machine)}</span>
         <span class="hide-s" style="color:var(--text3);font-size:12px">${gruppeLabel(gruppeOf(p.machine))}</span>
-        <span>${erg(p)}</span></div>`).join('')}
+        <span>${erg(p)}${p.status==='Freigegeben'&&p.geaendertVon?` <span style="font-size:11px;color:var(--text3)">· ${h(p.geaendertVon)}</span>`:''}</span></div>`).join('')}
     </div>`;}).join('');
   document.getElementById('periode-body').innerHTML=`
     ${ausMonat?`<button class="btn btn-sm" style="margin-bottom:12px" onclick="awOpenPeriode('${ausMonat}',true)">← zurück zum Monat</button>`:''}
