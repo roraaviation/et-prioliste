@@ -1851,9 +1851,10 @@ function renderAuswertung(){
   const byMonth=!awZeit||awZeit>90;
   const bucketKey=d=>{if(byMonth)return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;const t=new Date(d);t.setHours(0,0,0,0);t.setDate(t.getDate()-((t.getDay()+6)%7));return localDay(t);};
   const bucketLbl=k=>{if(byMonth){const[y,m]=k.split('-');return['Jän','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][+m-1]+' '+y.slice(2);}const d=new Date(k+'T00:00:00');const wk=isoWeek(d);return'KW'+wk;};
-  // Teile-Verlauf: raw parts pro Periode; FTR-Buckets für Tooltip
-  const rawBuckets={};rawVs.forEach(p=>{const d=new Date(p.ts_abg||p.ts_qs||p.ts_angek||Date.now());const k=bucketKey(d);(rawBuckets[k]=rawBuckets[k]||[]).push(p);});
-  const ftrBuckets={};vs.filter(v=>v.frei).forEach(v=>{const k=bucketKey(v.datum);(ftrBuckets[k]=ftrBuckets[k]||[]).push(v);});
+  // Teile-Verlauf: raw parts pro Periode – gleiche Filter wie awOpenPeriode (Maschine + ts_qs/ts_abg)
+  const machFilt=p=>!awMaschine||(awMaschine.startsWith('G:')?gruppeOf(p.machine)===awMaschine.slice(2):String(p.machine)===awMaschine);
+  const rawBuckets={};rawVs.filter(p=>machFilt(p)&&(p.ts_qs||p.ts_abg)).forEach(p=>{const d=new Date(p.ts_qs||p.ts_abg);const k=bucketKey(d);(rawBuckets[k]=rawBuckets[k]||[]).push(p);});
+  const ftrBuckets={};vs.filter(v=>v.frei&&(!awMaschine||(awMaschine.startsWith('G:')?v.gruppe===awMaschine.slice(2):v.machine===awMaschine))).forEach(v=>{const k=bucketKey(v.datum);(ftrBuckets[k]=ftrBuckets[k]||[]).push(v);});
   const keys=Object.keys(rawBuckets).sort().slice(window.innerWidth<700?-8:-16);
   const maxN=Math.max(1,...keys.map(k=>rawBuckets[k]?.length||0));
   const trend=keys.length?`<div class="trend">${keys.map(k=>{const n=rawBuckets[k]?.length||0;const fa=ftrBuckets[k]?agg(ftrBuckets[k]):null;return`<div class="trend-col" style="cursor:pointer" onclick="awOpenPeriode('${k}',${byMonth})" data-tip="<b>${bucketLbl(k)}</b><br>${n} Teile${fa?'<br>FTR '+fa.quote+' % ('+fa.ftr+'/'+fa.ab+' Erstteile)':'<br>FTR –'}<br><span style=\'font-size:11px\'>klicken für Details</span>"><span class="trend-v">${n}</span><div class="trend-bar" style="height:${Math.max(n/maxN*100,2)}%"></div></div>`;}).join('')}</div>
